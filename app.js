@@ -108,47 +108,50 @@ function dominant(stats) {
   return (stats.whitespace >= stats["fixed-width"]) ? "whitespace" : "fixed-width";
 }
 
+
+function isIgnorable(raw) {
+  if (!raw) return true;
+  // コメント行（; ! #）は無視
+  const t = raw.trimStart();
+  return t === '' || t.startsWith(';') || t.startsWith('#') || t.startsWith('!');
+}
+
 // --- ★コア：Chunk 読み + 逐次パース + 進捗 --- //
-async function parseFileWithProgress(file, chunkSize = 128 * 1024) { // 128KB/chunk
+async function parseFileWithProgress(file, chunkSize = 128 * 1024) {
   const decoder = new TextDecoder('utf-8', { fatal: false });
   const reflections = [];
   let skipped = 0;
   let offset = 0;
-  let leftover = "";  // チャンクを跨ぐ未完の行を保持
-  const formatStats = { "whitespace": 0, "fixed-width": 0 };
+  let leftover = '';
+  const formatStats = { 'whitespace': 0, 'fixed-width': 0 };
 
   while (offset < file.size) {
     const end = Math.min(offset + chunkSize, file.size);
-    const blob = file.slice(offset, end);
-    const buf = await blob.arrayBuffer();
+    const buf = await file.slice(offset, end).arrayBuffer();
     const text = decoder.decode(buf, { stream: true });
 
-    // 未完行 + 今回チャンク
     const chunkText = leftover + text;
-    // 行に分割（最後の要素は未完かもしれない）
     const lines = chunkText.split(/\r?\n/);
-    leftover = lines.pop() || ""; // 最後は次チャンクへ
+    leftover = lines.pop() ?? '';
 
     for (const raw of lines) {
+      if (isIgnorable(raw)) { continue; }
       const res = parseHKL_line_auto(raw);
       if (res.ok) {
         reflections.push(res.rec);
         if (res.format) formatStats[res.format] = (formatStats[res.format] || 0) + 1;
       } else {
-        // コメントや空行、パース不能行をスキップ
         skipped++;
       }
     }
 
     offset = end;
     const pct = (offset / file.size) * 100;
-    setProgress(pct, `読み込み中… ${Math.round(pct)}% （${offset}/${file.size} bytes）`);
-    // UI レスポンス向上のため小休止（大容量時に有効）
+    setProgress(pct, `読み込み中… ${Math.round(pct)}%（${offset}/${file.size} bytes）`);
     await microYield();
   }
 
-  // 最終チャンクの leftover 行を処理
-  if (leftover.trim()) {
+  if (!isIgnorable(leftover)) {
     const res = parseHKL_line_auto(leftover);
     if (res.ok) {
       reflections.push(res.rec);
