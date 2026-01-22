@@ -1,4 +1,3 @@
-
 import { parseHKL_auto, intensityToAmplitude, toCSV } from './utils/hkl.js';
 import { computeE } from './utils/e_normalize.js';
 
@@ -17,7 +16,7 @@ fileInput.addEventListener('change', async (e) => {
   log(`読み込み開始: ${file.name} (${file.size} bytes)`);
 
   const text = await file.text();
-  const { reflections, skipped } = parseHKL(text);
+  const { reflections, skipped } = parseHKL_auto(text);
   log(`パース完了: 反射 ${reflections.length} 件（スキップ ${skipped} 行）`);
 
   if (reflections.length === 0) {
