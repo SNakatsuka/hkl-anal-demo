@@ -29,39 +29,39 @@ fileInput.addEventListener('change', async (e) => {
       return;
     }
 
-    // 成功表示
-    summaryEl.innerHTML = `
-      <b>✔ パース成功</b><br>
-      データ数: ${reflections.length}<br>
-      判定形式: <b>${format}</b><br>
-      スキップ行: ${skipped}
-    `;
-    log(`パース成功：${reflections.length} 反射（形式: ${format}）`, "success");
+  // 成功表示
+  summaryEl.innerHTML = `
+    <b>✔ パース成功</b><br>
+    データ数: ${reflections.length}<br>
+    判定形式: <b>${format}</b><br>
+    スキップ行: ${skipped}
+  `;
+  log(`パース成功：${reflections.length} 反射（形式: ${format}）`, "success");
 
-    // |F| 計算
-    const withF = intensityToAmplitude(reflections);
-    const meanI = reflections.reduce((a,r)=>a+r.I,0)/reflections.length;
-    const meanF2 = withF.reduce((a,r)=>a+r.F*r.F,0)/withF.length;
-  
-    // E 正規化（簡易）
-    const { reflections: withE, meanF2: meanF2Used } = computeE(withF);
-  
-    // 概要
-    summaryEl.innerHTML = `
-      <ul>
-        <li>反射数: <b>${withE.length}</b></li>
-        <li>&lt;I&gt;（単純平均）: <b>${meanI.toFixed(3)}</b></li>
-        <li>&lt;F²&gt;（単純平均）: <b>${meanF2.toFixed(3)}</b>（E 正規化で使用: ${meanF2Used.toFixed(3)}）</li>
-        <li>注意: 今は分解能シェル/吸収/消衰/異常散乱を考慮していません（MVP）。</li>
-      </ul>
-    `;
-  
-    // ダウンロード用バッファ
-    lastF = withF.map(r => ({ h:r.h, k:r.k, l:r.l, F:r.F.toFixed(6) }));
-    lastE = withE.map(r => ({ h:r.h, k:r.k, l:r.l, E:r.E.toFixed(6) }));
-  
-    btnF.disabled = false; btnE.disabled = false;
-    log('準備完了。CSV をダウンロードできます。');
+  // |F| 計算
+  const withF = intensityToAmplitude(reflections);
+  const meanI = reflections.reduce((a,r)=>a+r.I,0)/reflections.length;
+  const meanF2 = withF.reduce((a,r)=>a+r.F*r.F,0)/withF.length;
+
+  // E 正規化（簡易）
+  const { reflections: withE, meanF2: meanF2Used } = computeE(withF);
+
+  // 概要
+  summaryEl.innerHTML = `
+    <ul>
+      <li>反射数: <b>${withE.length}</b></li>
+      <li>&lt;I&gt;（単純平均）: <b>${meanI.toFixed(3)}</b></li>
+      <li>&lt;F²&gt;（単純平均）: <b>${meanF2.toFixed(3)}</b>（E 正規化で使用: ${meanF2Used.toFixed(3)}）</li>
+      <li>注意: 今は分解能シェル/吸収/消衰/異常散乱を考慮していません（MVP）。</li>
+    </ul>
+  `;
+
+  // ダウンロード用バッファ
+  lastF = withF.map(r => ({ h:r.h, k:r.k, l:r.l, F:r.F.toFixed(6) }));
+  lastE = withE.map(r => ({ h:r.h, k:r.k, l:r.l, E:r.E.toFixed(6) }));
+
+  btnF.disabled = false; btnE.disabled = false;
+  log('準備完了。CSV をダウンロードできます。');
   }
   catch (err) {
     summaryEl.textContent = "❌ エラー発生";
