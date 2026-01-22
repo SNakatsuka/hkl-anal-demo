@@ -32,6 +32,15 @@
     </section>
 
     <section class="panel">
+      <h2>進捗</h2>
+      <div style="display:flex; align-items:center; gap:12px;">
+        <progress id="progress" value="0" max="100" style="width: 320px;"></progress>
+        <span id="progressPct">0%</span>
+      </div>
+      <div id="progressInfo" class="hint">待機中…</div>
+    </section>
+
+    <section class="panel">
       <h2>ログ</h2>
       <pre id="log"></pre>
     </section>
