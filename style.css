@@ -16,3 +16,4 @@ button {
 button:disabled { opacity: 0.5; cursor: not-allowed; }
 .hint { color: #94a3b8; font-size: 0.9em; }
 pre { white-space: pre-wrap; background:#0b1220; padding:12px; border-radius:8px; }
+progress { height: 16px; }
