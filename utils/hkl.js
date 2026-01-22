@@ -61,3 +61,19 @@ export function parseHKL_auto(text) {
 
   return { reflections: data, skipped };
 }
+
+// I → |F|：|F| = sqrt(max(I, 0))
+// 注意：実務ではスケーリング/消衰/吸収補正が必要（MVPでは未実装）
+export function intensityToAmplitude(reflections) {
+  return reflections.map(r => ({
+    ...r, F: Math.sqrt(Math.max(r.I, 0.0))
+  }));
+}
+
+// CSV 文字列化
+export function toCSV(rows, header) {
+  const head = header.join(',');
+  const body = rows.map(r => header.map(h => r[h]).join(',')).join('\n');
+  return head + '\n' + body + '\n';
+}
+``
