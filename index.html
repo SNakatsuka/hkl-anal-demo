@@ -1,0 +1,48 @@
+
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>SHELXT-Next Demo (HKL → |F|, E 正規化)</title>
+  <link rel="stylesheet" href="styles.css"/>
+</head>
+<body>
+  <header>
+    <h1>SHELXT-Next Demo</h1>
+    <p>HKL（h k l I sigma）を読み込み、|F| と E 値を試算します（MVP）。</p>
+  </header>
+
+  <main>
+    <section class="panel">
+      <h2>1) ファイル読み込み</h2>
+      <input id="fileInput" type="file" accept=".hkl,.HKL,.txt"/>
+      <p class="hint">想定フォーマット: <code>h k l I sigma</code> の空白区切り（行コメントや空行は自動スキップ）</p>
+    </section>
+
+    <section class="panel">
+      <h2>2) 概要</h2>
+      <div id="summary">ファイル未読込</div>
+    </section>
+
+    <section class="panel">
+      <h2>3) 出力</h2>
+      <button id="downloadEcsv" disabled>E 値 CSV をダウンロード</button>
+      <button id="downloadFcsv" disabled>|F| CSV をダウンロード</button>
+    </section>
+
+    <section class="panel">
+      <h2>ログ</h2>
+      <pre id="log"></pre>
+    </section>
+  </main>
+
+  <footer>
+    <small>© 2026 SHELXT-Next Project（試作）</small>
+  </footer>
+
+  <script src="utils/hkl.js"></script>
+  <script src="utils/e_normalize.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
