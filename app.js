@@ -1,5 +1,5 @@
 
-import { parseHKL, intensityToAmplitude, toCSV } from './utils/hkl.js';
+import { parseHKL_auto, intensityToAmplitude, toCSV } from './utils/hkl.js';
 import { computeE } from './utils/e_normalize.js';
 
 const fileInput = document.getElementById('fileInput');
