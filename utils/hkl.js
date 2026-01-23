@@ -1,4 +1,4 @@
-
+// utils/hkl.js
 // HKL auto-detect parser: whitespace-separated OR fixed-width HKLF (SHELX)
 
 // 文字コードを HKL の空白に合わせて正規化（タブ/NBSP/全角スペース→半角スペース）
@@ -21,6 +21,30 @@ export function parseHKL_line_auto(rawLine) {
   const wsCandidate = line.trim();
   if (wsCandidate) {
     const parts = wsCandidate.split(/\s+/); // ここは圧縮OK
+    // --- (A) f2plus.dat：8列専用 (h k l F2 F2sigma F2raw Absorption flag) ---
+    // 仕様: F2 は LP 補正済み・吸収なし・未平均 → SHELX 形式にするため Absorption で割る
+    if (parts.length === 8) {
+      const h = parseInt(parts[0], 10);
+      const k = parseInt(parts[1], 10);
+      const l = parseInt(parts[2], 10);
+      const F2 = parseFloat(parts[3]);
+      const F2sigma = parseFloat(parts[4]);
+      // const F2raw = parseFloat(parts[5]); // 使わない場合は読み捨て
+      const Abs = parseFloat(parts[6]);
+      const flag = parts[7]; // テキストとして保持
+      if (![h,k,l].some(Number.isNaN) && Number.isFinite(F2)) {
+        // 安全策：Abs が 0 や非数のときの暴走回避
+        const A = Number.isFinite(Abs) ? Math.max(Abs, 1e-12) : 1.0;
+        const I  = F2 / A;
+        const sig = Number.isFinite(F2sigma) ? (F2sigma / A) : undefined;
+        return {
+          ok: true,
+          rec: { h, k, l, I, sig, absorption:A, flag },
+          format: "f2plus-8cols"
+        };
+      }
+    }
+    // --- (B) 一般の空白区切り（5列 or 4列） ---
     if (parts.length >= 5) {
       const h = parseInt(parts[0], 10);
       const k = parseInt(parts[1], 10);
@@ -31,8 +55,17 @@ export function parseHKL_line_auto(rawLine) {
         return { ok:true, rec:{h,k,l,I,sig}, format:'whitespace' };
       }
     }
+    if (parts.length === 4) {
+      const h = parseInt(parts[0], 10);
+      const k = parseInt(parts[1], 10);
+      const l = parseInt(parts[2], 10);
+      const I = parseFloat(parts[3]);
+      if (![h,k,l].some(Number.isNaN) && Number.isFinite(I)) {
+        return { ok:true, rec:{h,k,l,I}, format:'whitespace' };
+      }
+    }
   }
-
+  
   // --- 2) 固定幅（SHELX HKLF 標準列幅） ---
   // 重要：ここでは trim しない。列幅で切る。
   // 列幅不足の短い行は不正としてスキップ。
