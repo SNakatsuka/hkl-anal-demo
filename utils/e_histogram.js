@@ -59,7 +59,7 @@ export function renderEHistogramSVG(containerEl, hist, opts={}) {
     const rect = document.createElementNS(svgns, "rect");
     rect.setAttribute("x", x);
     rect.setAttribute("y", y);
-   Attribute("fill", "#38bdf8");
+    rect.Attribute("fill", "#38bdf8");
     svg.appendChild(rect);
   }
 
