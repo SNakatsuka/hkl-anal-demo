@@ -9,13 +9,13 @@ function isEven(n) { return (n & 1) === 0; }
 function isOdd(n) { return (n & 1) !== 0; }
 
 // --- robust median（winsorize + median + eps） ---
-function robustMedian(arr, eps = 1e-6) {
+function robustMedian(arr, eps = 1e-6, frac = 0.05) {
   if (!arr.length) return 0 + eps;
   // winsorize 5%
   const sorted = [...arr].sort((a,b)=>a-b);
   const n = sorted.length;
-  const lo = sorted[Math.max(0, Math.floor(n*0.05))];
-  const hi = sorted[Math.min(n-1, Math.floor(n*0.95))];
+  const lo = sorted[Math.max(0, Math.floor(n*frac))];
+  const hi = sorted[Math.min(n-1, Math.floor(n*(1-frac)))];
   
   const clipped = arr.map(x => Math.min(Math.max(x, lo), hi)).sort((x,y)=>x-y);
 
@@ -101,7 +101,8 @@ export function analyzeExtinction(reflections, withE = false, presentMask = null
   // I 格子：h+k+l 偶数のみ
   const If = [], Ia = []; // 強度リスト
   let nfI=0, naI=0, kfI=0, kaI=0; // present/total カウント
-  for (const r of reflections){
+  for (let i=0; i<reflections.length; i++){
+    const r = reflections[i];
     const s = r.h + r.k + r.l;
     if (isOdd(s)) { If.push(getVal(r)); nfI++; if (pm[i]) kfI++; }
     else          { Ia.push(getVal(r)); naI++; if (pm[i]) kaI++; }
@@ -110,7 +111,8 @@ export function analyzeExtinction(reflections, withE = false, presentMask = null
 
   // C 格子：h+k 偶数のみ
   const Cf = [], Ca = []; let nfC=0, naC=0, kfC=0, kaC=0;
-  for (const r of reflections){
+  for (let i=0; i<reflections.length; i++){
+    const r = reflections[i];
     const s = r.h + r.k;
     if (isOdd(s)) { Cf.push(getVal(r)); nfC++; if (pm[i]) kfC++; }
     else          { Ca.push(getVal(r)); naC++; if (pm[i]) kaC++; }
@@ -119,17 +121,19 @@ export function analyzeExtinction(reflections, withE = false, presentMask = null
 
   // F 格子：全偶数 or 全奇数のみ
   const Ff = [], Fa = []; let nfF=0, naF=0, kfF=0, kaF=0;
-  for (const r of reflections){
-    if (allowedF(r.h, r.k, r.l)) { Fa.push(getVal(r)); naF++; if (pm[i]) kaF++;
+  for (let i=0; i<reflections.length; i++){
+    const r = reflections[i];
+    if (allowedF(r.h, r.k, r.l)) { Fa.push(getVal(r)); naF++; if (pm[i]) kaF++; }
     else                         { Ff.push(getVal(r)); nfF++; if (pm[i]) kfF++; }
   }
   const F_forbid = robustMedian(Ff), F_allow = robustMedian(Fa);
 
   // R(hex) 格子
   const Rf = [], Ra = []; let nfR=0, naR=0, kfR=0, kaR=0;
-  for (const r of reflections){
+  for (let i=0; i<reflections.length; i++){
+    const r = reflections[i];
     if (allowedRhex(r.h, r.k, r.l)) { Ra.push(getVal(r)); naR++; if (pm[i]) kaR++; }
-    else                             { Rf.push(getVal(r)); nfR++; if (pm[i]) kfR++; }
+    else                            { Rf.push(getVal(r)); nfR++; if (pm[i]) kfR++; }
   }
   const R_forbid = robustMedian(Rf), R_allow = robustMedian(Ra);
 
@@ -142,7 +146,7 @@ export function analyzeExtinction(reflections, withE = false, presentMask = null
     withPvals("C", C_forbid, C_allow, nfC, kfC, naC, kaC),
     withPvals("F", F_forbid, F_allow, nfF, kfF, naF, kaF),
     withPvals("R(hex)", R_forbid, R_allow, nfR, kfR, naR, kaR),
-    { type: "P", ratio: 1.0, forbid:0, allow:P_mean, counts:{nf:0,na:pm.length,kf:0,ka:pm.filter(Boolean).length}, pValue:null, confidenceStars:"★☆☆☆☆" }
+    { type: "P", ratio: 1.0, forbid:0, allow:P_mean, counts:{ total: pm.length, present: pm.filter(Boolean).length }, pValue: null, confidenceStars: "★☆☆☆☆" }
   ];
 
   scores.sort((a,b)=> a.ratio - b.ratio);
@@ -162,8 +166,17 @@ export function analyzeExtinction(reflections, withE = false, presentMask = null
     scores,
     best: bestLabeled,
     center_confidence: confident ? "high" : "low",
-    center_delta: delta
-  };
+    center_delta: delta,
+    params: {
+      withE,
+      presentMaskProvided: !!presentMask,
+      presentThresholdE: 0.6,
+      presentThresholdIRatio: 0.05,
+      winsorFrac: 0.05,
+      ratioWeak: RATIO_WEAK,
+      deltaMin: DELTA_MIN
+    }
+ };
 }
 
 // forbid/allow の中央値ベース比に加え、present 比率差の p 値と☆を付与
