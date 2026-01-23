@@ -9,7 +9,7 @@
 </head>
 <body>
   <header>
-    <h1>hkl-analysis-demo2601230917UPDATE</h1>
+    <h1>hkl-analysis-demo2601230937UPDATE</h1>
     <p>HKL（h k l I sigma）を読み込み、|F| と E 値を試算します（MVP）。</p>
   </header>
 
@@ -54,6 +54,17 @@
       <p class="hint">
         ※ いずれも任意入力ですが、Wilson プロットには λ と θ_max が必要です。<br>
         ※ HKL のみでも解析できますが、正確な分解能計算が可能になります。
+      </p>
+    </section>
+
+    <section class="panel">
+      <h2>Wilson-like プロット（近似：R = h²+k²+l²）</h2>
+      <div id="wilsonContainer" style="overflow:auto">
+        <!-- SVG をここに動的に生成 -->
+      </div>
+      <p class="hint">
+        ※ ユニットセル未入力のため、d-spacing ではなく R=h²+k²+l² を横軸に用いた近似プロットです。<br>
+        ※ 形状（高角側での落ち方）と品質の当たりを掴む目的に使えます。
       </p>
     </section>
 
