@@ -1,30 +1,36 @@
-
 // Eヒストグラムと centro/acentro 判定
-export function buildEHistogram(withE, nBins = 20) {
+
+// 署名を拡張: (withE, nBins=20, opts={ excludeLowest: 0 })
+export function buildEHistogram(withE, nBins = 20, opts = {}) {
+  const { excludeLowest = 0 } = opts;
+
   const absE = withE.map(r => Math.abs(r.E)).filter(Number.isFinite);
   if (absE.length === 0) return null;
 
+  // --- 既存のビン分割 ---
   const Emax = Math.max(...absE);
   const bins = [];
   for (let i=0;i<nBins;i++) {
-    bins.push({ i, lo: i*(Emax/nBins), hi: (i+1)*(Emax/nBins), n:0 });
+    bins.push({ i, lo: i*(Emax/nBins), hi: (i+1)*(Emax/nBins), n:0, vals:[] });
   }
-
   for (const x of absE) {
     let idx = Math.floor(x / Emax * nBins);
-    if (idx >= nBins) idx = nBins-1;
+    if (idx >= nBins) idx = nBins - 1;
     bins[idx].n++;
+    bins[idx].vals.push(x);
   }
 
-  // centro/acentro 判定
-  const E2minus1 = absE.map(x => Math.abs(x*x - 1));
-  const meanE2m1 = E2minus1.reduce((a,b)=>a+b,0)/E2minus1.length;
+  // --- ⟨|E²−1|⟩ を計算（最下位シェル exclude） ---
+  const usedBins = bins.slice(Math.min(excludeLowest, nBins));
+  const used = usedBins.flatMap(b => b.vals);
+  const E2minus1 = used.map(x => Math.abs(x*x - 1));
+  const meanE2m1 = E2minus1.reduce((a,b)=>a+b,0) / Math.max(E2minus1.length,1);
 
   const diffA = Math.abs(meanE2m1 - 0.736);
   const diffC = Math.abs(meanE2m1 - 0.968);
   const likely = diffA < diffC ? "acentric（非セントロ）" : "centric（セントロ）";
 
-  return { bins, Emax, meanE2m1, likely };
+  return { bins, Emax, meanE2m1, likely, excludeLowest };
 }
 
 // SVG描画（超簡易棒グラフ）
