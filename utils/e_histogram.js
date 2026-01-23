@@ -8,7 +8,7 @@ export function buildEHistogram(withE, nBins = 20, opts = {}) {
   if (absE.length === 0) return null;
 
   // --- 既存のビン分割 ---
-  const Emax = Math.max(...absE);
+  const Emax = Math.max(...absE, 1e-12);
   const bins = [];
   for (let i=0;i<nBins;i++) {
     bins.push({ i, lo: i*(Emax/nBins), hi: (i+1)*(Emax/nBins), n:0, vals:[] });
@@ -65,6 +65,8 @@ export function renderEHistogramSVG(containerEl, hist, opts={}) {
     rect.setAttribute("x", x);
     rect.setAttribute("y", y);
     rect.setAttribute("fill", "#38bdf8");
+    rect.setAttribute("width", barW);
+    rect.setAttribute("height", barH);
     
     const title = document.createElementNS(svgns, "title");
     title.textContent = `bin ${i}: n = ${b.n}`;
