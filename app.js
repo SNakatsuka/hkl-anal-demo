@@ -4,6 +4,8 @@ import { eStats } from './utils/stats.js';
 import { buildWilsonProxy, renderWilsonProxySVG, linearRegressionXY } from './utils/wilson_proxy.js';
 import { buildEHistogram, renderEHistogramSVG } from './utils/e_histogram.js';
 import { analyzeExtinction } from './utils/extinction.js';
+import { renderExtinction } from "./utils/render_ext.js";
+import { renderSG } from "./utils/render_sg.js";
 import { buildSpaceGroupCandidates } from './utils/sg_candidates.js';
 
 const fileInput = document.getElementById('fileInput');
@@ -123,6 +125,10 @@ fileInput.addEventListener('change', async (e) => {
     
     // --- Extinction / Lattice-centering 判定 ---
     const ext = analyzeExtinction(withE, true);
+    renderExtinction(document.getElementById("extContainer"), ext);
+
+    renderSG(document.getElementById("sgContainer"), ext, eStats);
+
     if (ext) {
       const best = ext.best;
       const lines = ext.scores.map(s =>
