@@ -24,15 +24,13 @@ function log(msg, type="info") {
   logEl.scrollTop = logEl.scrollHeight;
 }
 
-
-
 fileInput.addEventListener('change', async (e) => {
   const file = e.target.files?.[0];
   if (!file) return;
 
   resetUIForLoading(file);
 
-  let withF = null;   // ← try の外に宣言しておく
+  let withF = null; // try の外に宣言
 
   try {
     const { reflections, skipped, formatStats } = await parseFileWithProgress(file);
@@ -44,11 +42,10 @@ fileInput.addEventListener('change', async (e) => {
       return;
     }
 
-    // ここから後工程（|F| と E）
+    // |F| 計算 & E 正規化
     withF = intensityToAmplitude(reflections);
-
-    const meanI = reflections.reduce((a,r)=>a+r.I,0) / reflections.length;
-    const meanF2 = withF.reduce((a,r)=>a + r.F*r.F,0) / withF.length;
+    const meanI = reflections.reduce((a, r) => a + r.I, 0) / reflections.length;
+    const meanF2 = withF.reduce((a, r) => a + r.F * r.F, 0) / withF.length;
     const { reflections: withE, meanF2: meanF2Used } = computeE(withF);
 
     // サマリ表示
@@ -63,51 +60,53 @@ fileInput.addEventListener('change', async (e) => {
     `;
     log(`パース成功：${withE.length} 反射（主形式: ${dominantFormat}）`, "success");
 
-    // ダウンロード用
-    lastF = withF.map(r => ({ h:r.h, k:r.k, l:r.l, F:r.F.toFixed(6) }));
-    lastE = withE.map(r => ({ h:r.h, k:r.k, l:r.l, E:r.E.toFixed(6) }));
+    // ダウンロード用データ
+    lastF = withF.map(r => ({ h: r.h, k: r.k, l: r.l, F: r.F.toFixed(6) }));
+    lastE = withE.map(r => ({ h: r.h, k: r.k, l: r.l, E: r.E.toFixed(6) }));
     btnF.disabled = false; btnE.disabled = false;
 
-  // 実験パラメータログ
-  const params = getExperimentParams();
-  if (!Number.isNaN(params.thetaMax)) {
-    log(`実験パラメータ: λ=${params.lambda}, θ_max=${params.thetaMax}`, "info");
-  }
-  // 近似 Wilson プロットを生成
-  // --- Wilson-like plot (with regression) ---
-  const { points } = buildWilsonProxy(withF, 10); // R = h²+k²+l² を 10シェル
-  const reg = linearRegressionXY(points);         // 最小二乗で回帰
-  
-  const container = document.getElementById('wilsonContainer');
-  renderWilsonProxySVG(container, points, { 
-    width: 720, 
-    height: 320,
-    regression: reg    // ★ 回帰線を描画する
-  });
-  
-  // ログ
-  if (reg) {
-    log(`Wilson-like 回帰線: slope=${reg.a.toFixed(4)}, intercept=${reg.b.toFixed(3)}`, "info");
-  } else {
-    log(`Wilson-like 回帰線: データ不足`, "warn");
-  }
-  
-  // E ヒストグラム生成
-  const eHist = buildEHistogram(withE, 20);
-  const eContainer = document.getElementById('eHistContainer');
-  renderEHistogramSVG(eContainer, eHist);
-  
-  log(`E分布: mean|E²−1|=${eHist.meanE2m1.toFixed(3)} → ${eHist.likely}`, "info");
-    // 進捗バーを完了へ
+    // 実験パラメータ（任意入力）
+    const params = getExperimentParams();
+    if (!Number.isNaN(params.thetaMax)) {
+      log(`実験パラメータ: λ=${params.lambda}, θ_max=${params.thetaMax}`, "info");
+    }
+
+    // --- A) Wilson-like plot（回帰線付き） ---
+    const { points } = buildWilsonProxy(withF, 10);  // 10シェル固定
+    const reg = linearRegressionXY(points);          // 最小二乗回帰
+
+    const wContainer = document.getElementById('wilsonContainer');
+    renderWilsonProxySVG(wContainer, points, {
+      width: 720,
+      height: 320,
+      regression: reg
+    });
+
+    if (reg) {
+      log(`Wilson-like 回帰線: slope=${reg.a.toFixed(4)}, intercept=${reg.b.toFixed(3)}`, "info");
+    } else {
+      log("Wilson-like 回帰線: データ不足", "warn");
+    }
+
+    // --- B) E 分布ヒストグラム + centro/acentro 推定 ---
+    const eHist = buildEHistogram(withE, 20); // 20 bin
+    const eContainer = document.getElementById('eHistContainer');
+    renderEHistogramSVG(eContainer, eHist);
+    if (eHist) {
+      log(`E分布: mean|E²−1|=${eHist.meanE2m1.toFixed(3)} → ${eHist.likely}`, "info");
+    } else {
+      log("E分布: データ不足", "warn");
+    }
+
+    // 完了
     setProgress(100, `${file.name} の読み込みと解析が完了`);
 
   } catch (err) {
     summaryEl.textContent = "❌ エラー発生";
     log("例外：" + (err?.message || err), "error");
     setProgress(0, "エラー");
-    return;  // ← ここで抜ける（withF が null なら後続を呼ばない）
+    return;
   }
-  
 });
 
 const stats = eStats(withE);
