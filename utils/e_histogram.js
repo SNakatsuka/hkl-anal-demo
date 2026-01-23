@@ -59,6 +59,11 @@ export function renderEHistogramSVG(containerEl, hist, opts={}) {
     rect.setAttribute("x", x);
     rect.setAttribute("y", y);
     rect.setAttribute("fill", "#38bdf8");
+    
+    const title = document.createElementNS(svgns, "title");
+    title.textContent = `bin ${i}: n = ${b.n}`;
+    rect.appendChild(title);
+
     svg.appendChild(rect);
   }
 
@@ -72,10 +77,6 @@ export function renderEHistogramSVG(containerEl, hist, opts={}) {
   svg.appendChild(xl);
 
   containerEl.appendChild(svg);
-
-  const title = document.createElementNS(svgns, "title");
-  title.textContent = `bin ${i}: n = ${b.n}`;
-  rect.appendChild(title);
   
   // 追加のテキスト表示
   const info = document.createElement("div");
