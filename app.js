@@ -188,8 +188,7 @@ fileInput.addEventListener('change', async (e) => {
     // --- 空間群候補ランキング（feature 統合） ---
     const sgCandidates = buildSpaceGroupCandidates(ext, eHist, screw, glide);
  
-    // SG 描画（候補リストを渡す：render_sg.js 側をこの呼び出しに合わせるのが自然）
-
+    // SG 描画（候補リストを第一級に、根拠は context で渡す）
     renderSG(
       document.getElementById("sgContainer"),
       sgCandidates,
