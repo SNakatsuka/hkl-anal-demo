@@ -1,5 +1,9 @@
 // utils/extinction.js
 
+// 追加20260123：有意差の閾値
+const DELTA_MIN = 0.15;
+const RATIO_WEAK = 0.90;
+
 // 偶奇判定
 function isEven(n) { return (n & 1) === 0; }
 function isOdd(n) { return (n & 1) !== 0; }
@@ -89,6 +93,24 @@ export function analyzeExtinction(reflections, withE = false) {
     { type: "P", ratio: 1.0, forbid:0, allow:P_mean }
   ];
 
+
   scores.sort((a,b)=> a.ratio - b.ratio);
-  return { scores, best: scores[0] };
+  const best = scores[0];
+  const second = scores[1] ?? { ratio: 1.0 };
+
+  // 追加20260123：有意差評価と “未確定” ラベル
+  const delta = Math.abs(second.ratio - best.ratio);
+  const confident = (delta >= DELTA_MIN) && (best.ratio < RATIO_WEAK);
+
+  const bestLabeled = { ...best };
+  if (!confident) {
+    bestLabeled.type = "P(?)"; // 未確定
+  }
+
+  return {
+    scores,
+    best: bestLabeled,
+    center_confidence: confident ? "high" : "low",
+    center_delta: delta
+  };
 }
