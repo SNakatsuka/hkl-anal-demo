@@ -7,6 +7,10 @@ import { analyzeExtinction } from './utils/extinction.js';
 import { renderExtinction } from "./utils/render_ext.js";
 import { renderSG } from "./utils/render_sg.js";
 import { buildSpaceGroupCandidates } from './utils/sg_candidates.js';
+// ★ 新規 20260123
+import { buildPresentMaskE } from './utils/presence.js';
+import { analyzeScrew_0k0 } from './utils/screw.js';
+import { analyzeGlide_h0l } from './utils/glide.js';
 
 const fileInput = document.getElementById('fileInput');
 const summaryEl = document.getElementById('summary');
@@ -105,7 +109,7 @@ fileInput.addEventListener('change', async (e) => {
       log("E分布: データ不足", "warn");
     }
 
-    // --- E 統計ブロック ---
+    // --- E 統計ブロック（簡易） ---
     const stats = eStats(withE);
     if (stats) {
       const { n, e1, e2, e3, e4, e2minus1_abs, likely } = stats;
@@ -122,19 +126,68 @@ fileInput.addEventListener('change', async (e) => {
         <span class="hint">※ 厳密な判定には分解能依存の正規化が望ましい</span>
       `;
     }
-    
-    // --- Extinction / Lattice-centering 判定 ---
+
+    // --- present/absent 2値化（Eベース推奨） ---
+    const presentMask = buildPresentMaskE(withE, 0.8);
+
+    // --- Extinction / Lattice-centering（Eベースで解析） ---
     const ext = analyzeExtinction(withE, true);
+
     // UI 描画（ここで extContainer を完全に構築）
     renderExtinction(document.getElementById("extContainer"), ext);
+
+    // --- Screw（0k0 → 2₁@b） ---
+    const screw = analyzeScrew_0k0(withE, presentMask, { minCount: 20 });
+
+    // --- Glide（h0l → a/c/n/d） ---
+    const glide = analyzeGlide_h0l(withE, presentMask, { minCount: 30 });
+
+    // --- extContainer の下にレポートセクション extReport を生成 ---
+    let extReport = document.getElementById('extReport');
+    if (!extReport) {
+      extReport = document.createElement('div');
+      extReport.id = 'extReport';
+      extReport.style.marginTop = "12px";
+      extReport.style.padding = "8px";
+      extReport.style.background = "#0b1220";
+      extReport.style.border = "1px solid #122036";
+      extReport.style.borderRadius = "8px";
+      extContainer.appendChild(extReport);
+    }
+    extReport.innerHTML = "";
     
     // ログだけ残す
     if (ext) {
       log(`Extinction 判定 (Eベース): 最有力 = ${ext.best.type}`, "info");
     }
 
-    // --- 空間群候補ランキング ---
-    const sgCandidates = buildSpaceGroupCandidates(ext, eHist);
+    // --- レポート出力（screw） ---
+    {
+      const sec = document.createElement('div');
+      sec.style.marginTop = "10px";
+      const even = `${screw.even.present}/${screw.even.total}`;
+      const odd  = `${screw.odd.present}/${screw.odd.total}`;
+      sec.innerHTML = `
+        <b>直列条件（0k0 → 2₁@b）</b><br>
+        even(k): ${even} / odd(k): ${odd} ⇒ <b>${screw.call}</b>
+      `;
+      extReport.appendChild(sec);
+    }
+
+    // --- レポート出力（glide） ---
+    {
+      const sec = document.createElement('div');
+      sec.style.marginTop = "10px";
+      sec.innerHTML = `
+        <b>帯域条件（h0l → glide）</b><br>
+        ${glide.summary}
+      `;
+      extReport.appendChild(sec);
+    }
+
+    // --- 空間群候補ランキング（feature 統合） ---
+    const sgCandidates = buildSpaceGroupCandidates(ext, eHist, screw, glide);
+ 
     // SG 描画（ext と E 分布を渡す）
     renderSG(document.getElementById("sgContainer"), ext, eStats);
 
@@ -157,7 +210,6 @@ btnF.addEventListener('click', () => {
   if (!lastF) return;
   download('amplitude_F.csv', toCSV(lastF, ['h','k','l','F']));
 });
-
 btnE.addEventListener('click', () => {
   if (!lastE) return;
   download('normalized_E.csv', toCSV(lastE, ['h','k','l','E']));
@@ -178,7 +230,6 @@ function setProgress(pct, info) {
   progressPctEl.textContent = `${v}%`;
   if (info) progressInfoEl.textContent = info;
 }
-
 function resetUIForLoading(file) {
   log(`ファイル読み込み開始: ${file.name} (${file.size} bytes)`, "info");
   summaryEl.textContent = "解析中…";
@@ -190,19 +241,16 @@ function resetUIForLoading(file) {
 function dominant(stats) {
   return (stats.whitespace >= stats["fixed-width"]) ? "whitespace" : "fixed-width";
 }
-
 function isIgnorable(raw) {
   if (!raw) return true;
   // コメント行（; ! #）は無視
   const t = raw.trimStart();
   return t === '' || t.startsWith(';') || t.startsWith('#') || t.startsWith('!');
 }
-
 function getExperimentParams() {
   const lambda = parseFloat(document.getElementById('lambdaInput').value);
   const thetaMin = parseFloat(document.getElementById('thetaMinInput').value);
   const thetaMax = parseFloat(document.getElementById('thetaMaxInput').value);
-
   return { lambda, thetaMin, thetaMax };
 }
 
@@ -210,9 +258,7 @@ function getExperimentParams() {
 async function parseFileWithProgress(file, chunkSize = 128 * 1024) {
   const decoder = new TextDecoder('utf-8', { fatal: false });
   const reflections = [];
-  let skipped = 0;
-  let offset = 0;
-  let leftover = '';
+  let skipped = 0, offset = 0, leftover = '';
   const formatStats = { 'whitespace': 0, 'fixed-width': 0 };
 
   while (offset < file.size) {
@@ -225,7 +271,7 @@ async function parseFileWithProgress(file, chunkSize = 128 * 1024) {
     leftover = lines.pop() ?? '';
 
     for (const raw of lines) {
-      if (isIgnorable(raw)) { continue; }
+      if (isIgnorable(raw)) continue;
       const res = parseHKL_line_auto(raw);
       if (res.ok) {
         reflections.push(res.rec);
@@ -250,10 +296,6 @@ async function parseFileWithProgress(file, chunkSize = 128 * 1024) {
       skipped++;
     }
   }
-
   return { reflections, skipped, formatStats };
 }
-
-function microYield() {
-  return new Promise(requestAnimationFrame);
-}
+function microYield() { return new Promise(requestAnimationFrame); }
