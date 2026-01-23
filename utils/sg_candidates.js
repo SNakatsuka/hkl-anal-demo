@@ -54,6 +54,16 @@ const COMMON_SG = {
   }
 };
 
+const SYSTEM_TO_LATTICE = {
+  triclinic:   ["P"],
+  monoclinic:  ["P", "C"],
+  orthorhombic:["P", "C", "I", "F"],
+  tetragonal:  ["P", "I"],
+  trigonal:    ["R"],
+  hexagonal:   ["P"],
+  cubic:       ["P", "I", "F"]
+};
+
 // ---------- 重み付け ----------
 
 // centering：未確定（P(?)）や ratio が高いときは 0、0.8→1.0で線形に 0 へ
@@ -61,7 +71,7 @@ function centeringWeight(ext) {
   if (!ext || !ext.best) return 0;
   const best = ext.best;
   if (typeof best.ratio !== "number") return 0;
-  if (best.type.startsWith("P")) return 0; // 未確定
+  if (best.type === "P(?)") return 0; // 未確定
   const r = Math.min(best.ratio, 1.0);
   const w = Math.max(0, (0.8 - Math.min(r, 0.8)) / 0.8);
   return w; // 最大でも 1 未満
@@ -84,8 +94,7 @@ function screwWeight(screw) {
 }
 
 // ---------- メイン ----------
-
-export function buildSpaceGroupCandidates(ext, eHist, screw = null, glide = null) {
+export function buildSpaceGroupCandidates(ext, eHist, screw, glide, priors = {}) {
   if (!ext) return [];
 
   const lattice = pickLatticeLetter(ext.best);
@@ -106,7 +115,7 @@ export function buildSpaceGroupCandidates(ext, eHist, screw = null, glide = null
   // ベーススコアを極小に（過剰誘導を避ける）
   const base = 0.2;
 
-  const rows = seeds.map(name => {
+  let rows = seeds.map(name => {
     let s = base + 0.8 * wCenter + 1.2 * wGlide + 0.5 * wScrew + wE;
 
     // glide 名と候補名の後押し（glideが強い場合のみ微加点）
@@ -123,7 +132,26 @@ export function buildSpaceGroupCandidates(ext, eHist, screw = null, glide = null
 
     return { name, score: s, lattice, centric: !!centric };
   });
-
+  
+  const { formulaObj, meanZval, temperature, zprime, crystalSystem } = priors;
+  
+  let wFormula = 0;
+  if (meanZval > 20) wFormula += 0.2;  // 重元素 → centric 寄り
+  if (meanZval < 10) wFormula += 0.1;  // 有機物 → P21/c, P-1 が多い
+  
+  const wTemp = temperatureWeight(temperature);
+  const wZp   = zprimeWeight(zprime);
+  
+  // 結晶系の強制
+  if (crystalSystem) {
+    const allowed = SYSTEM_TO_LATTICE[crystalSystem] || [];
+    rows = rows.filter(r => allowed.some(L => r.name.startsWith(L)));
+  }  
+  // 最終スコア
+  rows.forEach(r => {
+    r.score += wFormula + wTemp + wZp;
+  });  
+  
   // 重複排除 & スコア降順で上位8件
   const unique = new Map(rows.map(r => [r.name, r]));
   const out = [...unique.values()].sort((a,b) => b.score - a.score);
