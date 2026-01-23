@@ -160,6 +160,46 @@ export function renderWilsonProxySVG(containerEl, points, opts = {}) {
     svg.appendChild(dot);
   }
 
+  // 回帰線
+  if (opts.regression) {
+    const { a, b } = opts.regression;
+    // x範囲の端点で線を生成
+    const x1 = xmin, x2 = xmax;
+    const y1 = a * x1 + b;
+    const y2 = a * x2 + b;
+  
+    const line = document.createElementNS(svgns, "line");
+    line.setAttribute("x1", xscale(x1));
+    line.setAttribute("y1", yscale(y1));
+    line.setAttribute("x2", xscale(x2));
+    line.setAttribute("y2", yscale(y2));
+    line.setAttribute("stroke", "#f472b6");  // ピンク
+    line.setAttribute("stroke-width", "2");
+    line.setAttribute("stroke-dasharray", "6 4");
+    svg.appendChild(line);
+  }
+
   containerEl.appendChild(svg);
 }
-``
+
+// 最小二乗の線形回帰: points = [{x, y}, ...]
+export function linearRegressionXY(points) {
+  const n = points.length;
+  if (n < 2) return null;
+
+  let sx=0, sy=0, sxx=0, sxy=0;
+  for (const p of points) {
+    sx += p.x;
+    sy += p.y;
+    sxx += p.x * p.x;
+    sxy += p.x * p.y;
+  }
+  const denom = (n * sxx - sx * sx);
+  if (Math.abs(denom) < 1e-12) return null;
+
+  const a = (n * sxy - sx * sy) / denom;     // 傾き
+  const b = (sy - a * sx) / n;              // 切片
+
+  return { a, b };
+}
+
