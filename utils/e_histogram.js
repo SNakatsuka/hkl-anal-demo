@@ -27,7 +27,6 @@ export function buildEHistogram(withE, nBins = 20) {
   return { bins, Emax, meanE2m1, likely };
 }
 
-
 // SVG描画（超簡易棒グラフ）
 export function renderEHistogramSVG(containerEl, hist, opts={}) {
   containerEl.innerHTML = "";
@@ -74,6 +73,10 @@ export function renderEHistogramSVG(containerEl, hist, opts={}) {
 
   containerEl.appendChild(svg);
 
+  const title = document.createElementNS(svgns, "title");
+  title.textContent = `bin ${i}: n = ${b.n}`;
+  rect.appendChild(title);
+  
   // 追加のテキスト表示
   const info = document.createElement("div");
   info.style.color = "#93c5fd";
