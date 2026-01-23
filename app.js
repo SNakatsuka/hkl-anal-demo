@@ -186,8 +186,18 @@ fileInput.addEventListener('change', async (e) => {
     }
 
     // --- 空間群候補ランキング（feature 統合） ---
-    const sgCandidates = buildSpaceGroupCandidates(ext, eHist, screw, glide);
- 
+    const sgCandidates = buildSpaceGroupCandidates(
+      ext,
+      eHist,
+      screw,
+      glide,
+      {
+        meanZval,      // ← 将来ここに組成から計算した平均 Z
+        temperature,   // ← 入力フォームからの測定温度
+        zprime,        // ← ユーザー入力の Z'
+        crystalSystem  // ← ユーザーが後で選ぶ結晶系
+      }
+    ); 
     // SG 描画（候補リストを第一級に、根拠は context で渡す）
     renderSG(
       document.getElementById("sgContainer"),
