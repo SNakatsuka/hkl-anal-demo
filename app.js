@@ -125,41 +125,20 @@ fileInput.addEventListener('change', async (e) => {
     
     // --- Extinction / Lattice-centering 判定 ---
     const ext = analyzeExtinction(withE, true);
+    // UI 描画（ここで extContainer を完全に構築）
     renderExtinction(document.getElementById("extContainer"), ext);
-
-    renderSG(document.getElementById("sgContainer"), ext, eStats);
-
+    
+    // ログだけ残す
     if (ext) {
-      const best = ext.best;
-      const lines = ext.scores.map(s =>
-        `${s.type}: ratio=${s.ratio.toFixed(3)} (forbid=${s.forbid.toFixed(3)}, allow=${s.allow.toFixed(3)})`
-      ).join("<br>");
-    
-      extContainer.innerHTML = `
-        <b>格子心 推定（系統消滅）</b><br>
-        最有力: <b>${best.type}</b>（ratio=${best.ratio.toFixed(3)}）<br><br>
-        <div style="font-size:0.9em;color:#9ca3af">${lines}</div>
-      `;
-    
-      log(`Extinction 判定 (Eベース): 最有力 = ${best.type}`, "info");
+      log(`Extinction 判定 (Eベース): 最有力 = ${ext.best.type}`, "info");
     }
 
     // --- 空間群候補ランキング ---
     const sgCandidates = buildSpaceGroupCandidates(ext, eHist);
-    
-    const sgContainer = document.getElementById('sgContainer');
-    
+    // SG 描画（ext と E 分布を渡す）
+    renderSG(document.getElementById("sgContainer"), ext, eStats);
+
     if (sgCandidates && sgCandidates.length > 0) {
-      const html = sgCandidates.map(c =>
-        `<b>${c.name}</b> (score=${c.score.toFixed(2)})`
-      ).join("<br>");
-    
-      sgContainer.innerHTML = `
-        <b>空間群候補ランキング（簡易）</b><br>
-        格子心: <b>${sgCandidates[0].lattice}</b><br>
-        セントロ性: <b>${sgCandidates[0].centric ? "centro" : "acentro"}</b><br><br>
-        ${html}
-      `;
       log(`空間群候補: ${sgCandidates.map(c=>c.name).join(", ")}`, "info");
     }
     
