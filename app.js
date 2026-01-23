@@ -55,6 +55,8 @@ fileInput.addEventListener('change', async (e) => {
     const meanI  = reflections.reduce((a,r)=>a+r.I,0)/reflections.length;
     const meanF2 = withF.reduce((a,r)=>a+r.F*r.F,0)/withF.length;
 
+    const { reflections: withE, meanF2 } = computeE(withF);
+
     // サマリ表示
     const dominantFormat = dominant(formatStats);
     summaryEl.innerHTML = `
@@ -63,7 +65,7 @@ fileInput.addEventListener('change', async (e) => {
       判定形式 内訳: whitespace=${formatStats.whitespace}, fixed-width=${formatStats["fixed-width"]}<br>
       採用形式: <b>${dominantFormat}</b><br>
       スキップ行: ${skipped}<br>
-      &lt;I&gt;: ${meanI.toFixed(3)} / &lt;F²&gt;: ${meanF2.toFixed(3)}（正規化で使用: ${meanF2Used.toFixed(3)}）
+      &lt;I&gt;: ${meanI.toFixed(3)} / &lt;F²&gt;: ${meanF2.toFixed(3)}（正規化で使用: ${meanF2.toFixed(3)}）
     `;
     log(`パース成功：${withE.length} 反射（主形式: ${dominantFormat}）`, "success");
 
