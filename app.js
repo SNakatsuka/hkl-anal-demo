@@ -4,6 +4,7 @@ import { eStats } from './utils/stats.js';
 import { buildWilsonProxy, renderWilsonProxySVG, linearRegressionXY } from './utils/wilson_proxy.js';
 import { buildEHistogram, renderEHistogramSVG } from './utils/e_histogram.js';
 import { analyzeExtinction } from './utils/extinction.js';
+import { buildSpaceGroupCandidates } from './utils/sg_candidates.js';
 
 const fileInput = document.getElementById('fileInput');
 const summaryEl = document.getElementById('summary');
@@ -137,6 +138,25 @@ fileInput.addEventListener('change', async (e) => {
       log(`Extinction 判定: 最有力 = ${best.type}`, "info");
     }
 
+    // --- 空間群候補ランキング ---
+    const sgCandidates = buildSpaceGroupCandidates(ext, eHist);
+    
+    const sgContainer = document.getElementById('sgContainer');
+    
+    if (sgCandidates && sgCandidates.length > 0) {
+      const html = sgCandidates.map(c =>
+        `<b>${c.name}</b> (score=${c.score.toFixed(2)})`
+      ).join("<br>");
+    
+      sgContainer.innerHTML = `
+        <b>空間群候補ランキング（簡易）</b><br>
+        格子心: <b>${sgCandidates[0].lattice}</b><br>
+        セントロ性: <b>${sgCandidates[0].centric ? "centro" : "acentro"}</b><br><br>
+        ${html}
+      `;
+      log(`空間群候補: ${sgCandidates.map(c=>c.name).join(", ")}`, "info");
+    }
+    
     // 完了
     setProgress(100, `${file.name} の読み込みと解析が完了`);
 
