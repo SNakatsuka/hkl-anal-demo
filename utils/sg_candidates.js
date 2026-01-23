@@ -112,7 +112,7 @@ export function buildSpaceGroupCandidates(ext, eHist, screw = null, glide = null
     // glide 名と候補名の後押し（glideが強い場合のみ微加点）
     if (wGlide > 0 && glide?.best?.name) {
       const g = glide.best.name;
-      if (g.startsWith("c-glide") && /\/c|c$/.test(name)) s += 0.10;
+      if (g.startsWith("c-glide") && /\bc\b/.test(name)) s += 0.10;
       if (g.startsWith("a-glide") && /\/a|a$/.test(name)) s += 0.08;
       if (g.startsWith("n-glide") && /\/n|n$/.test(name)) s += 0.06;
       if (g.startsWith("d-glide") && /d$/.test(name))     s += 0.04;
