@@ -3,7 +3,6 @@ import { computeE } from './utils/e_normalize.js';
 import { eStats } from './utils/stats.js';
 import { buildWilsonProxy, renderWilsonProxySVG, linearRegressionXY } from './utils/wilson_proxy.js';
 import { buildEHistogram, renderEHistogramSVG } from './utils/e_histogram.js';
-// --- Extinction / Lattice-centering 判定 ---
 import { analyzeExtinction } from './utils/extinction.js';
 
 const fileInput = document.getElementById('fileInput');
@@ -120,9 +119,9 @@ fileInput.addEventListener('change', async (e) => {
         <span class="hint">※ 厳密な判定には分解能依存の正規化が望ましい</span>
       `;
     }
-
-    const ext = analyzeExtinction(reflections);
     
+    // --- Extinction / Lattice-centering 判定 ---
+    const ext = analyzeExtinction(reflections);
     if (ext) {
       const best = ext.best;
       const lines = ext.scores.map(s =>
