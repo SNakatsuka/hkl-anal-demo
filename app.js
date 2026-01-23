@@ -122,7 +122,7 @@ fileInput.addEventListener('change', async (e) => {
     }
     
     // --- Extinction / Lattice-centering 判定 ---
-    const ext = analyzeExtinction(reflections);
+    const ext = analyzeExtinction(withE, true);
     if (ext) {
       const best = ext.best;
       const lines = ext.scores.map(s =>
@@ -135,7 +135,7 @@ fileInput.addEventListener('change', async (e) => {
         <div style="font-size:0.9em;color:#9ca3af">${lines}</div>
       `;
     
-      log(`Extinction 判定: 最有力 = ${best.type}`, "info");
+      log(`Extinction 判定 (Eベース): 最有力 = ${best.type}`, "info");
     }
 
     // --- 空間群候補ランキング ---
