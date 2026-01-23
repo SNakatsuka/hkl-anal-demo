@@ -1,18 +1,14 @@
-
 // utils/sg_candidates.js
 //
 // 空間群候補ランキング（格子心 × セントロ性）
-// ext: analyzeExtinction() の戻り値
+// ext:   analyzeExtinction() の戻り値
 // eHist: buildEHistogram() の戻り値
 // screw: analyzeScrew_0k0() の戻り値
 // glide: analyzeGlide_h0l() の戻り値
-//
-// 方針：
-//  - centering は「有意差があるときのみ」弱めに加点（僅差は未確定扱い）
-//  - glide は「禁制率が十分低いときだけ」強く加点（弱い時は 0）
-//  - screw は 2₁ の強証拠があるときのみ少し加点
-//  - E統計（centric/acentric 判定）は微加点
-//  - 最終候補は重複排除後にスコア降順で上位8件
+// priors: { meanZval, temperature, zprime, crystalSystem } など
+
+import { temperatureWeight } from "./temperature.js";
+import { zprimeWeight } from "./zprime.js";
 
 function pickLatticeLetter(centeringBest) {
   const t = centeringBest?.type || "P";
@@ -23,14 +19,13 @@ function pickLatticeLetter(centeringBest) {
 
 function isCentricByE(eHist) {
   if (!eHist || typeof eHist.meanE2m1 !== "number") return null;
-  // ⟨|E²-1|⟩ が 0.968 に近ければ centric、0.736 に近ければ acentric
   const m = eHist.meanE2m1;
   const diffA = Math.abs(m - 0.736);
   const diffC = Math.abs(m - 0.968);
   return diffC < diffA; // true → centric
 }
 
-// “よく出る”小分子の代表空間群を lattice/centric 別に用意（簡易）
+// “よく出る”小分子の代表空間群（簡易）
 const COMMON_SG = {
   P: {
     centric:  ["P-1", "P2_1/c", "Pbca", "Pnma"],
@@ -45,7 +40,7 @@ const COMMON_SG = {
     acentric: ["I2", "Iba2"]
   },
   F: {
-    centric:  ["Fm-3m", "Fd-3m"],   // 参考：F は立方に多い
+    centric:  ["Fm-3m", "Fd-3m"],
     acentric: ["Fdd2", "F222"]
   },
   R: {
@@ -54,6 +49,8 @@ const COMMON_SG = {
   }
 };
 
+// 結晶系 → 許される格子記号（最初の文字）
+// ※「どの結晶系にどの格子があり得るか」の簡易版
 const SYSTEM_TO_LATTICE = {
   triclinic:   ["P"],
   monoclinic:  ["P", "C"],
@@ -71,7 +68,7 @@ function centeringWeight(ext) {
   if (!ext || !ext.best) return 0;
   const best = ext.best;
   if (typeof best.ratio !== "number") return 0;
-  if (best.type === "P(?)") return 0; // 未確定
+  if (best.type === "P(?)") return 0; // 未確定だけ 0、Primitive は許す
   const r = Math.min(best.ratio, 1.0);
   const w = Math.max(0, (0.8 - Math.min(r, 0.8)) / 0.8);
   return w; // 最大でも 1 未満
@@ -94,7 +91,7 @@ function screwWeight(screw) {
 }
 
 // ---------- メイン ----------
-export function buildSpaceGroupCandidates(ext, eHist, screw, glide, priors = {}) {
+export function buildSpaceGroupCandidates(ext, eHist, screw = null, glide = null, priors = {}) {
   if (!ext) return [];
 
   const lattice = pickLatticeLetter(ext.best);
@@ -106,13 +103,11 @@ export function buildSpaceGroupCandidates(ext, eHist, screw, glide, priors = {})
   else if (centric === false) seeds = pool.acentric;
   else                        seeds = [...pool.centric, ...pool.acentric];
 
-  // 新しい重み付け
-  const wCenter = centeringWeight(ext);  // 僅差や ratio 高は 0 近く
-  const wGlide  = glideWeight(glide);    // 強いときだけ 1.0〜
+  const wCenter = centeringWeight(ext);
+  const wGlide  = glideWeight(glide);
   const wScrew  = screwWeight(screw);
-  const wE      = (centric !== null) ? 0.2 : 0.0; // E統計が使えたかで微加点
+  const wE      = (centric !== null) ? 0.2 : 0.0;
 
-  // ベーススコアを極小に（過剰誘導を避ける）
   const base = 0.2;
 
   let rows = seeds.map(name => {
@@ -132,27 +127,35 @@ export function buildSpaceGroupCandidates(ext, eHist, screw, glide, priors = {})
 
     return { name, score: s, lattice, centric: !!centric };
   });
-  
-  const { formulaObj, meanZval, temperature, zprime, crystalSystem } = priors;
-  
+
+  const { meanZval, temperature, zprime, crystalSystem } = priors;
+
+  // 組成（平均 Z）による弱い prior
   let wFormula = 0;
-  if (meanZval > 20) wFormula += 0.2;  // 重元素 → centric 寄り
-  if (meanZval < 10) wFormula += 0.1;  // 有機物 → P21/c, P-1 が多い
-  
+  if (typeof meanZval === "number") {
+    if (meanZval > 20) wFormula += 0.2; // 重元素 → centric 寄り
+    if (meanZval < 10) wFormula += 0.1; // 有機物 → P2_1/c, P-1 が多い
+  }
+
   const wTemp = temperatureWeight(temperature);
   const wZp   = zprimeWeight(zprime);
-  
-  // 結晶系の強制
-  if (crystalSystem) {
-    const allowed = SYSTEM_TO_LATTICE[crystalSystem] || [];
-    rows = rows.filter(r => allowed.some(L => r.name.startsWith(L)));
-  }  
-  // 最終スコア
+
+  // priors の加点（全候補に一律に足す：あくまで“弱いバイアス”）
   rows.forEach(r => {
     r.score += wFormula + wTemp + wZp;
-  });  
-  
-  // 重複排除 & スコア降順で上位8件
+  });
+
+  // 結晶系フィルタ：結晶系 → 許される格子記号で絞る
+  if (crystalSystem) {
+    const allowedLattices = SYSTEM_TO_LATTICE[crystalSystem] || [];
+    if (allowedLattices.length > 0) {
+      rows = rows.filter(r => {
+        const L = r.name[0]; // 空間群名の先頭文字（P, C, I, F, R）
+        return allowedLattices.includes(L);
+      });
+    }
+  }
+
   const unique = new Map(rows.map(r => [r.name, r]));
   const out = [...unique.values()].sort((a,b) => b.score - a.score);
   return out.slice(0, 8);
