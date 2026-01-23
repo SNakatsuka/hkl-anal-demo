@@ -81,8 +81,9 @@ fileInput.addEventListener('change', async (e) => {
   
   // --- ここから Wilson-like plot (withF を安全に使える) ---
   const params = getExperimentParams();
-  log(`実験パラメータ: λ=${params.lambda}, θ_max=${params.thetaMax}`, "info");
-
+  if (!Number.isNaN(params.thetaMax)) {
+    log(`実験パラメータ: λ=${params.lambda}, θ_max=${params.thetaMax}`, "info");
+  }
   // 近似 Wilson プロットを生成
   const { points } = buildWilsonProxy(withF, 10); // 10シェル固定
   const container = document.getElementById('wilsonContainer');
