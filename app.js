@@ -1,5 +1,6 @@
 import { parseHKL_line_auto, intensityToAmplitude, toCSV } from './utils/hkl.js';
 import { computeE } from './utils/e_normalize.js';
+import { eStats } from './utils/stats.js';
 
 const fileInput = document.getElementById('fileInput');
 const summaryEl = document.getElementById('summary');
@@ -69,6 +70,24 @@ fileInput.addEventListener('change', async (e) => {
     setProgress(0, "エラー");
   }
 });
+
+const stats = eStats(withE);
+
+if (stats) {
+  const { n, e1, e2, e3, e4, e2minus1_abs, likely } = stats;
+  summaryEl.innerHTML += `
+    <hr>
+    <b>E 統計（簡易）</b><br>
+    反射数: ${n}<br>
+    ⟨|E|⟩ = ${e1.toFixed(3)}<br>
+    ⟨|E|²⟩ = ${e2.toFixed(3)}<br>
+    ⟨|E|³⟩ = ${e3.toFixed(3)}<br>
+    ⟨|E|⁴⟩ = ${e4.toFixed(3)}<br>
+    ⟨|E² − 1|⟩ = ${e2minus1_abs.toFixed(3)}<br>
+    判定（参考）: <b>${likely}</b><br>
+    <span class="hint">※ 厳密な判定には分解能依存の正規化が望ましい</span>
+  `;
+}
 
 btnF.addEventListener('click', () => {
   if (!lastF) return;
