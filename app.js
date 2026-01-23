@@ -1,6 +1,7 @@
 import { parseHKL_line_auto, intensityToAmplitude, toCSV } from './utils/hkl.js';
 import { computeE } from './utils/e_normalize.js';
 import { eStats } from './utils/stats.js';
+import { buildWilsonProxy, renderWilsonProxySVG } from './utils/wilson_proxy.js';
 
 const fileInput = document.getElementById('fileInput');
 const summaryEl = document.getElementById('summary');
@@ -23,11 +24,14 @@ function log(msg, type="info") {
 }
 
 
+
 fileInput.addEventListener('change', async (e) => {
   const file = e.target.files?.[0];
   if (!file) return;
 
   resetUIForLoading(file);
+
+  let withF = null;   // ← try の外に宣言しておく
 
   try {
     const { reflections, skipped, formatStats } = await parseFileWithProgress(file);
@@ -40,12 +44,15 @@ fileInput.addEventListener('change', async (e) => {
     }
 
     // ここから後工程（|F| と E）
-    const withF = intensityToAmplitude(reflections);
-    const meanI = reflections.reduce((a,r)=>a+r.I,0)/reflections.length;
-    const meanF2 = withF.reduce((a,r)=>a+r.F*r.F,0)/withF.length;
+
+
+    withF = intensityToAmplitude(reflections);
+
+    const meanI = reflections.reduce((a,r)=>a+r.I,0) / reflections.length;
+    const meanF2 = withF.reduce((a,r)=>a + r.F*r.F,0) / withF.length;
     const { reflections: withE, meanF2: meanF2Used } = computeE(withF);
 
-    // サマリ
+    // サマリ表示
     const dominantFormat = dominant(formatStats);
     summaryEl.innerHTML = `
       <b>✔ パース成功</b><br>
@@ -62,13 +69,28 @@ fileInput.addEventListener('change', async (e) => {
     lastE = withE.map(r => ({ h:r.h, k:r.k, l:r.l, E:r.E.toFixed(6) }));
     btnF.disabled = false; btnE.disabled = false;
 
-    // 進捗バーを完了状態へ
+    // 進捗バーを完了へ
     setProgress(100, `${file.name} の読み込みと解析が完了`);
+
   } catch (err) {
     summaryEl.textContent = "❌ エラー発生";
     log("例外：" + (err?.message || err), "error");
     setProgress(0, "エラー");
+    return;  // ← ここで抜ける（withF が null なら後続を呼ばない）
   }
+  
+  // --- ここから Wilson-like plot (withF を安全に使える) ---
+  const params = getExperimentParams();
+  log(`実験パラメータ: λ=${params.lambda}, θ_max=${params.thetaMax}`, "info");
+
+  // 近似 Wilson プロットを生成
+  const { points } = buildWilsonProxy(withF, 10); // 10シェル固定
+  const container = document.getElementById('wilsonContainer');
+  renderWilsonProxySVG(container, points, { width: 720, height: 320 });
+  
+  // ログにも一言
+  log(`Wilson-like プロット: ${points.length} 点（10シェル中、有効シェル ${points.length}）`, "info");
+  
 });
 
 const stats = eStats(withE);
@@ -127,12 +149,19 @@ function dominant(stats) {
   return (stats.whitespace >= stats["fixed-width"]) ? "whitespace" : "fixed-width";
 }
 
-
 function isIgnorable(raw) {
   if (!raw) return true;
   // コメント行（; ! #）は無視
   const t = raw.trimStart();
   return t === '' || t.startsWith(';') || t.startsWith('#') || t.startsWith('!');
+}
+
+function getExperimentParams() {
+  const lambda = parseFloat(document.getElementById('lambdaInput').value);
+  const thetaMin = parseFloat(document.getElementById('thetaMinInput').value);
+  const thetaMax = parseFloat(document.getElementById('thetaMaxInput').value);
+
+  return { lambda, thetaMin, thetaMax };
 }
 
 // --- ★コア：Chunk 読み + 逐次パース + 進捗 --- //
