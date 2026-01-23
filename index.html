@@ -9,7 +9,8 @@
 </head>
 <body>
   <header>
-    <h1>hkl-analysis-demo2601231159UPDATE</h1>
+    <h1>hkl-analysis-demo</h1>
+    <small>build: 2026-01-23 15:30</small>
     <p>HKL（h k l I sigma）を読み込み、|F| と E 値を試算します（MVP）。</p>
   </header>
 
@@ -64,7 +65,8 @@
       </div>
       <p class="hint">
         ※ ユニットセル未入力のため、d-spacing ではなく R=h²+k²+l² を横軸に用いた近似プロットです。<br>
-        ※ 形状（高角側での落ち方）と品質の当たりを掴む目的に使えます。
+        ※ 形状（高角側での落ち方）と品質の当たりを掴む目的に使えます。<br>
+        ※ 絶対値ではなく“形”を見るためのプロットです。
       </p>
     </section>
 
@@ -72,7 +74,8 @@
       <h2>E 分布ヒストグラム</h2>
       <div id="eHistContainer"></div>
       <p class="hint">
-        ⟨|E²−1|⟩ に基づき、centro / acentro の推定を行います。
+        ⟨|E²−1|⟩ に基づき、centro / acentro の推定を行います。<br>
+        理想値：acentro ≈ 0.736, centro ≈ 0.968
       </p>
     </section>
 
@@ -81,7 +84,8 @@
       <div id="extContainer">未計算</div>
       <p class="hint">
         候補：P / I / C / F<br>
-        ratio = forbidden / allowed が小さいほど格子心の可能性が高い。
+        ratio = forbidden / allowed が小さいほど格子心の可能性が高い。<br>
+        ※ ロバスト統計（median + winsorize）により外れ値の影響を抑えています。
       </p>
     </section>
 
@@ -90,7 +94,7 @@
       <div id="sgContainer">未計算</div>
       <p class="hint">
         格子心（I/C/F/P）と E分布（centro/acentro）に基づく初期推定。<br>
-        完全な決定ではありませんが、SHELXT の初期段階と同等の役割を持ちます。
+        完全な決定ではありませんが、SHELX の初期段階と同等の役割を持ちます。
       </p>
     </section>
     
@@ -110,7 +114,7 @@
   </main>
 
   <footer>
-    <small>© 2026 SHELXT-Next Project（試作）</small>
+    <small>© 2026 SHELX-Next Project（試作）</small>
   </footer>
 
   <script type="module" src="utils/hkl.js"></script>
