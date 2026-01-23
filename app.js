@@ -33,22 +33,27 @@ fileInput.addEventListener('change', async (e) => {
   resetUIForLoading(file);
 
   let withF = null; // try の外に宣言
+  let withE = null; // try の外に宣言
+
 
   try {
     const { reflections, skipped, formatStats } = await parseFileWithProgress(file);
 
     if (reflections.length === 0) {
       summaryEl.textContent = "❌ パース失敗：有効な HKL 行がありません。";
-      log("解析に失敗：ファイル形式を確認してください。", "error");
       btnE.disabled = true; btnF.disabled = true;
       return;
     }
 
-    // |F| 計算 & E 正規化
+    // |F|
     withF = intensityToAmplitude(reflections);
-    const meanI = reflections.reduce((a, r) => a + r.I, 0) / reflections.length;
-    const meanF2 = withF.reduce((a, r) => a + r.F * r.F, 0) / withF.length;
-    const { reflections: withE, meanF2: meanF2Used } = computeE(withF);
+
+    // E 正規化
+    const ce = computeE(withF);
+    withE = ce.reflections;
+
+    const meanI  = reflections.reduce((a,r)=>a+r.I,0)/reflections.length;
+    const meanF2 = withF.reduce((a,r)=>a+r.F*r.F,0)/withF.length;
 
     // サマリ表示
     const dominantFormat = dominant(formatStats);
@@ -73,15 +78,13 @@ fileInput.addEventListener('change', async (e) => {
       log(`実験パラメータ: λ=${params.lambda}, θ_max=${params.thetaMax}`, "info");
     }
 
-    // --- A) Wilson-like plot（回帰線付き） ---
-    const { points } = buildWilsonProxy(withF, 10);  // 10シェル固定
-    const reg = linearRegressionXY(points);          // 最小二乗回帰
+    // --- Wilson-like + 回帰線 ---
+    const { points } = buildWilsonProxy(withF, 10);
+    const reg = linearRegressionXY(points);
 
-    const wContainer = document.getElementById('wilsonContainer');
-    renderWilsonProxySVG(wContainer, points, {
-      width: 720,
-      height: 320,
-      regression: reg
+    const wcon = document.getElementById('wilsonContainer');
+    renderWilsonProxySVG(wcon, points, {
+      width:720, height:320, regression: reg
     });
 
     if (reg) {
@@ -90,9 +93,9 @@ fileInput.addEventListener('change', async (e) => {
       log("Wilson-like 回帰線: データ不足", "warn");
     }
 
-    // --- B) E 分布ヒストグラム + centro/acentro 推定 ---
-    const eHist = buildEHistogram(withE, 20); // 20 bin
-    const eContainer = document.getElementById('eHistContainer');
+    // --- E ヒストグラム ---
+    const eHist = buildEHistogram(withE, 20);
+    const extContainer = document.getElementById('extContainer');
     renderEHistogramSVG(eContainer, eHist);
     if (eHist) {
       log(`E分布: mean|E²−1|=${eHist.meanE2m1.toFixed(3)} → ${eHist.likely}`, "info");
@@ -100,9 +103,25 @@ fileInput.addEventListener('change', async (e) => {
       log("E分布: データ不足", "warn");
     }
 
+    // --- E 統計ブロック ---
+    const stats = eStats(withE);
+    if (stats) {
+      const { n, e1, e2, e3, e4, e2minus1_abs, likely } = stats;
+      summaryEl.innerHTML += `
+        <hr>
+        <b>E 統計（簡易）</b><br>
+        反射数: ${n}<br>
+        ⟨|E|⟩ = ${e1.toFixed(3)}<br>
+        ⟨|E|²⟩ = ${e2.toFixed(3)}<br>
+        ⟨|E|³⟩ = ${e3.toFixed(3)}<br>
+        ⟨|E|⁴⟩ = ${e4.toFixed(3)}<br>
+        ⟨|E² − 1|⟩ = ${e2minus1_abs.toFixed(3)}<br>
+        判定（参考）: <b>${likely}</b><br>
+        <span class="hint">※ 厳密な判定には分解能依存の正規化が望ましい</span>
+      `;
+    }
+
     const ext = analyzeExtinction(reflections);
-    
-    const extContainer = document.getElementById('extContainer');
     
     if (ext) {
       const best = ext.best;
@@ -129,24 +148,6 @@ fileInput.addEventListener('change', async (e) => {
     return;
   }
 });
-
-const stats = eStats(withE);
-
-if (stats) {
-  const { n, e1, e2, e3, e4, e2minus1_abs, likely } = stats;
-  summaryEl.innerHTML += `
-    <hr>
-    <b>E 統計（簡易）</b><br>
-    反射数: ${n}<br>
-    ⟨|E|⟩ = ${e1.toFixed(3)}<br>
-    ⟨|E|²⟩ = ${e2.toFixed(3)}<br>
-    ⟨|E|³⟩ = ${e3.toFixed(3)}<br>
-    ⟨|E|⁴⟩ = ${e4.toFixed(3)}<br>
-    ⟨|E² − 1|⟩ = ${e2minus1_abs.toFixed(3)}<br>
-    判定（参考）: <b>${likely}</b><br>
-    <span class="hint">※ 厳密な判定には分解能依存の正規化が望ましい</span>
-  `;
-}
 
 btnF.addEventListener('click', () => {
   if (!lastF) return;
