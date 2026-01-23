@@ -9,7 +9,7 @@
 </head>
 <body>
   <header>
-    <h1>hkl-analysis-demo2601230851UPDATE</h1>
+    <h1>hkl-analysis-demo2601230917UPDATE</h1>
     <p>HKL（h k l I sigma）を読み込み、|F| と E 値を試算します（MVP）。</p>
   </header>
 
@@ -29,6 +29,32 @@
       <h2>3) 出力</h2>
       <button id="downloadEcsv" disabled>E 値 CSV をダウンロード</button>
       <button id="downloadFcsv" disabled>|F| CSV をダウンロード</button>
+    </section>
+
+    <section class="panel">
+      <h2>測定条件（Wilson plot 用）</h2>
+    
+      <label>
+        波長 λ (Å):
+        <input id="lambdaInput" type="number" step="0.00001" value="0.71073">
+      </label>
+      <br><br>
+    
+      <label>
+        θ_min (deg):
+        <input id="thetaMinInput" type="number" step="0.001" placeholder="例: 2.2380">
+      </label>
+      <br><br>
+    
+      <label>
+        θ_max (deg):
+        <input id="thetaMaxInput" type="number" step="0.001" placeholder="例: 30.3588">
+      </label>
+    
+      <p class="hint">
+        ※ いずれも任意入力ですが、Wilson プロットには λ と θ_max が必要です。<br>
+        ※ HKL のみでも解析できますが、正確な分解能計算が可能になります。
+      </p>
     </section>
 
     <section class="panel">
