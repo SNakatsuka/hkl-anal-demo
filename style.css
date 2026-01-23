@@ -17,3 +17,46 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
 .hint { color: #94a3b8; font-size: 0.9em; }
 pre { white-space: pre-wrap; background:#0b1220; padding:12px; border-radius:8px; }
 progress { height: 16px; }
+.ext-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 8px;
+  font-size: 14px;
+}
+
+.ext-table th, .ext-table td {
+  border: 1px solid #334155;
+  padding: 4px 6px;
+  text-align: center;
+}
+
+.ext-table th {
+  background: #1e293b;
+  color: #e2e8f0;
+}
+
+.conf {
+  font-family: "Courier New", monospace;
+  color: #fbbf24;
+}
+
+.best-lattice {
+  margin-top: 10px;
+  font-size: 15px;
+}
+
+.badge {
+  background: #0ea5e9;
+  color: white;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.sg-list {
+  margin-top: 6px;
+  padding-left: 20px;
+}
+
+.sg-list li {
+  margin-bottom: 2px;
+}
