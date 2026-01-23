@@ -15,23 +15,6 @@
 
   <main>
     <section class="panel">
-      <h2>1) ファイル読み込み</h2>
-      <input id="fileInput" type="file" accept=".hkl,.HKL,.txt"/>
-      <p class="hint">想定フォーマット: <code>h k l I sigma</code> の空白区切り（行コメントや空行は自動スキップ）</p>
-    </section>
-
-    <section class="panel">
-      <h2>2) 概要</h2>
-      <div id="summary">ファイル未読込</div>
-    </section>
-
-    <section class="panel">
-      <h2>3) 出力</h2>
-      <button id="downloadEcsv" disabled>E 値 CSV をダウンロード</button>
-      <button id="downloadFcsv" disabled>|F| CSV をダウンロード</button>
-    </section>
-
-    <section class="panel">
       <h2>測定条件（Wilson plot 用）</h2>
     
       <label>
@@ -55,6 +38,48 @@
         ※ いずれも任意入力ですが、Wilson プロットには λ と θ_max が必要です。<br>
         ※ HKL のみでも解析できますが、正確な分解能計算が可能になります。
       </p>
+    </section>
+    
+    <div class="panel">
+      <h3>追加パラメータ</h3>
+    
+      <label>組成（元素情報）</label>
+      <input id="formulaInput" placeholder="例: C12H10N2O3">
+    
+      <label>測定温度 (K)</label>
+      <input id="tempInput" type="number" placeholder="例: 100">
+    
+      <label>Z′（独立分子数）</label>
+      <input id="zprimeInput" type="number" step="0.5" placeholder="例: 1">
+    
+      <label>結晶系（推定後に選択も可能）</label>
+      <select id="crystalSystemSelect">
+        <option value="">自動推定に従う</option>
+        <option value="triclinic">triclinic</option>
+        <option value="monoclinic">monoclinic</option>
+        <option value="orthorhombic">orthorhombic</option>
+        <option value="tetragonal">tetragonal</option>
+        <option value="trigonal">trigonal</option>
+        <option value="hexagonal">hexagonal</option>
+        <option value="cubic">cubic</option>
+      </select>
+    </div>
+
+    <section class="panel">
+      <h2>1) ファイル読み込み</h2>
+      <input id="fileInput" type="file" accept=".hkl,.HKL,.txt"/>
+      <p class="hint">想定フォーマット: <code>h k l I sigma</code> の空白区切り（行コメントや空行は自動スキップ）</p>
+    </section>
+
+    <section class="panel">
+      <h2>2) 概要</h2>
+      <div id="summary">ファイル未読込</div>
+    </section>
+
+    <section class="panel">
+      <h2>3) 出力</h2>
+      <button id="downloadEcsv" disabled>E 値 CSV をダウンロード</button>
+      <button id="downloadFcsv" disabled>|F| CSV をダウンロード</button>
     </section>
 
     <section class="panel">
