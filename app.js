@@ -2,6 +2,7 @@ import { parseHKL_line_auto, intensityToAmplitude, toCSV } from './utils/hkl.js'
 import { computeE } from './utils/e_normalize.js';
 import { eStats } from './utils/stats.js';
 import { buildWilsonProxy, renderWilsonProxySVG, linearRegressionXY } from './utils/wilson_proxy.js';
+import { buildEHistogram, renderEHistogramSVG } from './utils/e_histogram.js';
 
 const fileInput = document.getElementById('fileInput');
 const summaryEl = document.getElementById('summary');
@@ -44,8 +45,6 @@ fileInput.addEventListener('change', async (e) => {
     }
 
     // ここから後工程（|F| と E）
-
-
     withF = intensityToAmplitude(reflections);
 
     const meanI = reflections.reduce((a,r)=>a+r.I,0) / reflections.length;
@@ -69,17 +68,7 @@ fileInput.addEventListener('change', async (e) => {
     lastE = withE.map(r => ({ h:r.h, k:r.k, l:r.l, E:r.E.toFixed(6) }));
     btnF.disabled = false; btnE.disabled = false;
 
-    // 進捗バーを完了へ
-    setProgress(100, `${file.name} の読み込みと解析が完了`);
-
-  } catch (err) {
-    summaryEl.textContent = "❌ エラー発生";
-    log("例外：" + (err?.message || err), "error");
-    setProgress(0, "エラー");
-    return;  // ← ここで抜ける（withF が null なら後続を呼ばない）
-  }
-  
-  // --- ここから Wilson-like plot (withF を安全に使える) ---
+  // 実験パラメータログ
   const params = getExperimentParams();
   if (!Number.isNaN(params.thetaMax)) {
     log(`実験パラメータ: λ=${params.lambda}, θ_max=${params.thetaMax}`, "info");
@@ -101,6 +90,22 @@ fileInput.addEventListener('change', async (e) => {
     log(`Wilson-like 回帰線: slope=${reg.a.toFixed(4)}, intercept=${reg.b.toFixed(3)}`, "info");
   } else {
     log(`Wilson-like 回帰線: データ不足`, "warn");
+  }
+  
+  // E ヒストグラム生成
+  const eHist = buildEHistogram(withE, 20);
+  const eContainer = document.getElementById('eHistContainer');
+  renderEHistogramSVG(eContainer, eHist);
+  
+  log(`E分布: mean|E²−1|=${eHist.meanE2m1.toFixed(3)} → ${eHist.likely}`, "info");
+    // 進捗バーを完了へ
+    setProgress(100, `${file.name} の読み込みと解析が完了`);
+
+  } catch (err) {
+    summaryEl.textContent = "❌ エラー発生";
+    log("例外：" + (err?.message || err), "error");
+    setProgress(0, "エラー");
+    return;  // ← ここで抜ける（withF が null なら後続を呼ばない）
   }
   
 });
