@@ -100,7 +100,7 @@ fileInput.addEventListener('change', async (e) => {
     }
 
     // --- E ヒストグラム ---
-     const eHist = buildEHistogram(withE, 20);
+     const eHist = buildEHistogram(withE, 20, { excludeLowest: 1 });
      const eHistContainer = document.getElementById('eHistContainer');
      renderEHistogramSVG(eHistContainer, eHist);
     if (eHist) {
@@ -128,7 +128,7 @@ fileInput.addEventListener('change', async (e) => {
     }
 
     // --- present/absent 2値化（Eベース推奨） ---
-    const presentMask = buildPresentMaskE(withE, 0.8);
+    const presentMask = buildPresentMaskE(withE, 0.6);
 
     // --- Extinction / Lattice-centering（Eベースで解析） ---    
     const ext = analyzeExtinction(withE, true);
