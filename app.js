@@ -96,7 +96,7 @@ fileInput.addEventListener('change', async (e) => {
     // --- E ヒストグラム ---
     const eHist = buildEHistogram(withE, 20);
     const extContainer = document.getElementById('extContainer');
-    renderEHistogramSVG(eContainer, eHist);
+    renderEHistogramSVG(extContainer, eHist);
     if (eHist) {
       log(`E分布: mean|E²−1|=${eHist.meanE2m1.toFixed(3)} → ${eHist.likely}`, "info");
     } else {
