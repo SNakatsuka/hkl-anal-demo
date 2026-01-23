@@ -9,7 +9,7 @@
 </head>
 <body>
   <header>
-    <h1>hkl-analysis-demo2601230937UPDATE</h1>
+    <h1>hkl-analysis-demo2601231102UPDATE</h1>
     <p>HKL（h k l I sigma）を読み込み、|F| と E 値を試算します（MVP）。</p>
   </header>
 
@@ -65,6 +65,14 @@
       <p class="hint">
         ※ ユニットセル未入力のため、d-spacing ではなく R=h²+k²+l² を横軸に用いた近似プロットです。<br>
         ※ 形状（高角側での落ち方）と品質の当たりを掴む目的に使えます。
+      </p>
+    </section>
+
+    <section class="panel">
+      <h2>E 分布ヒストグラム</h2>
+      <div id="eHistContainer"></div>
+      <p class="hint">
+        ⟨|E²−1|⟩ に基づき、centro / acentro の推定を行います。
       </p>
     </section>
 
