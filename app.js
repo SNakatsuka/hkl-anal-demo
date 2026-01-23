@@ -100,9 +100,9 @@ fileInput.addEventListener('change', async (e) => {
     }
 
     // --- E ヒストグラム ---
-    const eHist = buildEHistogram(withE, 20);
-    const extContainer = document.getElementById('extContainer');
-    renderEHistogramSVG(extContainer, eHist);
+     const eHist = buildEHistogram(withE, 20);
+     const eHistContainer = document.getElementById('eHistContainer');
+     renderEHistogramSVG(eHistContainer, eHist);
     if (eHist) {
       log(`E分布: mean|E²−1|=${eHist.meanE2m1.toFixed(3)} → ${eHist.likely}`, "info");
     } else {
@@ -130,11 +130,11 @@ fileInput.addEventListener('change', async (e) => {
     // --- present/absent 2値化（Eベース推奨） ---
     const presentMask = buildPresentMaskE(withE, 0.8);
 
-    // --- Extinction / Lattice-centering（Eベースで解析） ---
+    // --- Extinction / Lattice-centering（Eベースで解析） ---    
     const ext = analyzeExtinction(withE, true);
-
+    const extContainer = document.getElementById('extContainer');   // ← 追加 
     // UI 描画（ここで extContainer を完全に構築）
-    renderExtinction(document.getElementById("extContainer"), ext);
+    renderExtinction(extContainer, ext);
 
     // --- Screw（0k0 → 2₁@b） ---
     const screw = analyzeScrew_0k0(withE, presentMask, { minCount: 20 });
@@ -152,7 +152,7 @@ fileInput.addEventListener('change', async (e) => {
       extReport.style.background = "#0b1220";
       extReport.style.border = "1px solid #122036";
       extReport.style.borderRadius = "8px";
-      extContainer.appendChild(extReport);
+      extContainer.appendChild(extReport);  // ← extContainer を上で定義
     }
     extReport.innerHTML = "";
     
@@ -188,8 +188,13 @@ fileInput.addEventListener('change', async (e) => {
     // --- 空間群候補ランキング（feature 統合） ---
     const sgCandidates = buildSpaceGroupCandidates(ext, eHist, screw, glide);
  
-    // SG 描画（ext と E 分布を渡す）
-    renderSG(document.getElementById("sgContainer"), ext, eStats);
+    // SG 描画（候補リストを渡す：render_sg.js 側をこの呼び出しに合わせるのが自然）
+
+    renderSG(
+      document.getElementById("sgContainer"),
+      sgCandidates,
+      { ext, eHist, screw, glide } // 参考情報をオプションで渡す
+    );
 
     if (sgCandidates && sgCandidates.length > 0) {
       log(`空間群候補: ${sgCandidates.map(c=>c.name).join(", ")}`, "info");
