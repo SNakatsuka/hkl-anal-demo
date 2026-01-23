@@ -1,7 +1,7 @@
 import { parseHKL_line_auto, intensityToAmplitude, toCSV } from './utils/hkl.js';
 import { computeE } from './utils/e_normalize.js';
 import { eStats } from './utils/stats.js';
-import { buildWilsonProxy, renderWilsonProxySVG } from './utils/wilson_proxy.js';
+import { buildWilsonProxy, renderWilsonProxySVG, linearRegressionXY } from './utils/wilson_proxy.js';
 
 const fileInput = document.getElementById('fileInput');
 const summaryEl = document.getElementById('summary');
@@ -85,12 +85,23 @@ fileInput.addEventListener('change', async (e) => {
     log(`実験パラメータ: λ=${params.lambda}, θ_max=${params.thetaMax}`, "info");
   }
   // 近似 Wilson プロットを生成
-  const { points } = buildWilsonProxy(withF, 10); // 10シェル固定
-  const container = document.getElementById('wilsonContainer');
-  renderWilsonProxySVG(container, points, { width: 720, height: 320 });
+  // --- Wilson-like plot (with regression) ---
+  const { points } = buildWilsonProxy(withF, 10); // R = h²+k²+l² を 10シェル
+  const reg = linearRegressionXY(points);         // 最小二乗で回帰
   
-  // ログにも一言
-  log(`Wilson-like プロット: ${points.length} 点（10シェル中、有効シェル ${points.length}）`, "info");
+  const container = document.getElementById('wilsonContainer');
+  renderWilsonProxySVG(container, points, { 
+    width: 720, 
+    height: 320,
+    regression: reg    // ★ 回帰線を描画する
+  });
+  
+  // ログ
+  if (reg) {
+    log(`Wilson-like 回帰線: slope=${reg.a.toFixed(4)}, intercept=${reg.b.toFixed(3)}`, "info");
+  } else {
+    log(`Wilson-like 回帰線: データ不足`, "warn");
+  }
   
 });
 
