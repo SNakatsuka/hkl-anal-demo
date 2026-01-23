@@ -3,6 +3,8 @@ import { computeE } from './utils/e_normalize.js';
 import { eStats } from './utils/stats.js';
 import { buildWilsonProxy, renderWilsonProxySVG, linearRegressionXY } from './utils/wilson_proxy.js';
 import { buildEHistogram, renderEHistogramSVG } from './utils/e_histogram.js';
+// --- Extinction / Lattice-centering 判定 ---
+import { analyzeExtinction } from './utils/extinction.js';
 
 const fileInput = document.getElementById('fileInput');
 const summaryEl = document.getElementById('summary');
@@ -96,6 +98,25 @@ fileInput.addEventListener('change', async (e) => {
       log(`E分布: mean|E²−1|=${eHist.meanE2m1.toFixed(3)} → ${eHist.likely}`, "info");
     } else {
       log("E分布: データ不足", "warn");
+    }
+
+    const ext = analyzeExtinction(reflections);
+    
+    const extContainer = document.getElementById('extContainer');
+    
+    if (ext) {
+      const best = ext.best;
+      const lines = ext.scores.map(s =>
+        `${s.type}: ratio=${s.ratio.toFixed(3)} (forbid=${s.forbid.toFixed(3)}, allow=${s.allow.toFixed(3)})`
+      ).join("<br>");
+    
+      extContainer.innerHTML = `
+        <b>格子心 推定（系統消滅）</b><br>
+        最有力: <b>${best.type}</b>（ratio=${best.ratio.toFixed(3)}）<br><br>
+        <div style="font-size:0.9em;color:#9ca3af">${lines}</div>
+      `;
+    
+      log(`Extinction 判定: 最有力 = ${best.type}`, "info");
     }
 
     // 完了
