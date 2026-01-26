@@ -18,7 +18,7 @@ export async function parseFileWithProgress(file, onProgress = () => {}) {
     reflections.push(parsed.rec);
 
     // format 推定が返る仕様ならそれでカウント（なければ適当に whitespace++）
-    if (parsed.__fmt === 'fixed-width') formatStats["fixed-width"]++;
+    if (parsed.format === 'fixed-width') formatStats["fixed-width"]++;
     else formatStats.whitespace++;
     if (i % 1000 === 0) onProgress((i / total) * 100, `解析中: ${i}/${total}`);
   }
