@@ -14,8 +14,8 @@ export async function parseFileWithProgress(file, onProgress = () => {}) {
   for (let i = 0; i < total; i++) {
     const line = lines[i];
     const parsed = parseHKL_line_auto(line);
-    if (!parsed) { skipped++; continue; }
-    reflections.push(parsed);
+    if (!parsed.ok) { skipped++; continue; }
+    reflections.push(parsed.rec);
 
     // format 推定が返る仕様ならそれでカウント（なければ適当に whitespace++）
     if (parsed.__fmt === 'fixed-width') formatStats["fixed-width"]++;
