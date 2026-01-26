@@ -5,8 +5,8 @@ export function robustMedian(arr, frac = 0.05, eps = 1e-6) {
   if (!arr || arr.length === 0) return eps;
   const sorted = [...arr].sort((a,b)=>a-b);
   const n = sorted.length;
-  const lo = sorted[Math.floor(n * frac)];
-  const hi = sorted[Math.floor(n * (1 - frac))];
+  const lo = sorted[Math.max(0, Math.floor(n * frac))];
+  const hi = sorted[Math.min(n - 1, Math.floor(n * (1 - frac)))];  
   const clipped = arr.map(x => Math.min(Math.max(x, lo), hi)).sort((a,b)=>a-b);
   const m = Math.floor(clipped.length/2);
   const med = (clipped.length % 2) ? clipped[m] : (clipped[m-1] + clipped[m]) / 2;
@@ -14,7 +14,7 @@ export function robustMedian(arr, frac = 0.05, eps = 1e-6) {
 }
 
 // Eベース：E > threshold を“明確な存在”とする
-export function buildPresentMaskE(reflectionsWithE, threshold = 0.8) {
+export function buildPresentMaskE(reflectionsWithE, threshold = 0.6) {
   return reflectionsWithE.map(r => Number.isFinite(r.E) && (r.E > threshold));
 }
 
