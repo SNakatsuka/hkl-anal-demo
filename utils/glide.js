@@ -25,13 +25,17 @@ export function analyzeGlide_h0l(reflections, presentMask, { minCount = 30 } = {
     }
     const forbRate = totForb ? (preForb / totForb) : 1;
     const allowRate= totAllow ? (preAllow / totAllow) : 0;
-    const score = forbRate + 0.2*(1-allowRate); // 小さいほど良い
+    const raw = forbRate + 0.2*(1-allowRate);
+    const score = Math.max(0, 1 - raw);  // forbRate=0, allowRate=1 → score=1    
     lines.push({ name, forbRate, allowRate, score, counts:{ totAllow, preAllow, totForb, preForb } });
   }
 
   lines.sort((a,b)=> a.score - b.score);
   const best = lines[0];
-  const enough = ((best.counts.totAllow + best.counts.totForb) >= minCount);
+  const enough =
+    (best.counts.totAllow + best.counts.totForb) >= minCount &&
+    best.counts.totAllow >= 5 &&
+    best.counts.totForb >= 5;  
   const summary = enough
     ? `Top=${best.name}（禁制側 出現率 ${(100*best.forbRate).toFixed(2)}%） / 候補: ${lines.map(r=>`${r.name}:${(100*r.forbRate).toFixed(2)}%`).join(", ")}`
     : "判定不可（データ不足）";
