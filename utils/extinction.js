@@ -83,13 +83,13 @@ export function analyzeExtinction(reflections, withE = false, presentMask = null
   
   // present/absent を内部で用意（外から渡されない場合）
   let pm = presentMask;
-  if (!pm) {
+  if (!pm || pm.length !== reflections.length) {
     if (withE) {
-      pm = reflections.map(r => Number.isFinite(r.E) && (r.E > 0.6)); // 推奨: E>0.6
+      pm = reflections.map(r => Number.isFinite(r.E) && (r.E > 0.6));
     } else {
       const Ii = reflections.map(r => r.I).filter(Number.isFinite);
       const medI = robustMedian(Ii);
-      const thr = medI * 0.05; // Iベースの簡易しきい値
+      const thr = medI * 0.05;
       pm = reflections.map(r => Number.isFinite(r.I) && (r.I > thr));
     }
   }
