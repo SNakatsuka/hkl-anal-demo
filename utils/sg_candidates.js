@@ -1,5 +1,6 @@
 
 // utils/sg_candidates.js
+import { buildVotesForSeeds, getVotingWeights } from './sg_vote.js';
 
 function pickLatticeLetter(centeringBest) {
   const t = centeringBest?.type || "P";
@@ -9,13 +10,13 @@ function pickLatticeLetter(centeringBest) {
 }
 
 function isCentricByE(eHist) {
-  if (!eHist || typeof eHist.meanE2m1 !== "number") return null;
+  if (!eHist || typeof eHist.meanE2m1 !== "number") return null;
   // ⟨|E²-1|⟩: acentric ≈ 0.736, centric ≈ 0.968
-  const m = eHist.meanE2m1;
-  const diffA = Math.abs(m - 0.736);
-  const diffC = Math.abs(m - 0.968);
-  if (Math.abs(diffA - diffC) < 0.02) return null; // きわどい時は保留
-  return diffC < diffA ? true : false; // true → centric
+  const m = eHist.meanE2m1;
+  const diffA = Math.abs(m - 0.736);
+  const diffC = Math.abs(m - 0.968);
+  if (Math.abs(diffA - diffC) < 0.02) return null;
+  return diffC < diffA ? true : false;
 }
 
 // “よく出る”小分子の代表空間群（簡易）
@@ -105,69 +106,32 @@ export function buildSpaceGroupCandidates(ext, eHist, screw, glide, priors = {})
   if (!ext) return [];
 
   const lattice = pickLatticeLetter(ext.best);
-  const centricFlag = isCentricByE(eHist); // true|false|null
+  const centric = isCentricByE(eHist); // true|false|null
 
-  const pool = COMMON_SG[lattice] || COMMON_SG.P;
-  let seeds = [];
-  if (centricFlag === true)       seeds = pool.centric;
-  else if (centricFlag === false) seeds = pool.acentric;
-  else                            seeds = [...pool.centric, ...pool.acentric];
-
-  // 重み
-  const wCenter = centeringWeight(ext);
-  const wGlide  = glideWeight(glide);
-  const wScrew  = screwWeight(screw);
-  const wE      = (centricFlag !== null) ? 0.2 : 0.0;
-
-  // ベーススコア（過剰誘導を避ける）
-  const base = 0.2;
-
-  let rows = seeds.map(name => {
-    let s = base + 0.8 * wCenter + 1.2 * wGlide + 0.5 * wScrew + wE;
-
-    // glide が強い場合のみ候補名の「/a, /c, /n, d など」を微後押し
-    if (wGlide > 0) {
-      const gname = glide?.best?.name || "";
-      // /( ^|\/ )c( \/|$ )/ で "c" グライドの部位にマッチ
-      if (gname.startsWith("c-glide") && /(^|\/)c(\/|$)/.test(name)) s += 0.10;
-      if (gname.startsWith("a-glide") && /(^|\/)a(\/|$)/.test(name)) s += 0.08;
-      if (gname.startsWith("n-glide") && /(^|\/)n(\/|$)/.test(name)) s += 0.06;
-      // d-glide: Fdd2 など中間にも現れるので全体検索
-      if (gname.startsWith("d-glide") && /d/.test(name)) s += 0.04;
-    }
-
-    // screw が強い時は 21 を含む候補へ微加点
-    if (wScrew > 0 && /21/.test(name)) s += 0.08;
-
-    return { name, score: s, lattice, centricState: centricFlag === null ? "unknown" : (centricFlag ? "centric" : "acentric") };
-  });
+  const votes = buildVotesForSeeds(seeds, { ext, eHist, screw, glide, priors }, getVotingWeights());
+  let rows = votes.map(v => ({
+    name: v.name,
+    score: v.total,
+    breakdown: v.breakdown,
+    lattice,
+    centric: (centric === null ? "unknown" : (centric ? "centric" : "acentric"))
+  }));
 
   const { formulaObj, meanZval, temperature, zprime, crystalSystem } = priors;
 
-  let wFormula = 0;
   if (typeof meanZval === "number") {
-    if (meanZval > 20) wFormula += 0.2;  // 重元素 → centric 寄り
-    if (meanZval < 10) wFormula += 0.1;  // 有機物 → P21/c, P-1 が多い
   } else {
     // 将来: formulaObj から平均Zを推定して wFormula を与える余地あり
   }
+  
+   // 結晶系の強制
+   if (crystalSystem) {
+     const allowed = SYSTEM_TO_LATTICE[crystalSystem] || [];
+     rows = rows.filter(r => allowed.some(L => r.name.startsWith(L)));
+   }  
 
-  const wTemp = temperatureWeight(temperature);
-  const wZp   = zprimeWeight(zprime);
-
-  // 結晶系の強制（SYSTEM_TO_LATTICE 準拠）
-  if (crystalSystem) {
-    const allowed = SYSTEM_TO_LATTICE[crystalSystem] || [];
-    rows = rows.filter(r => allowed.some(L => r.name.startsWith(L)));
-  }
-
-  // 最終スコア加算
-  rows.forEach(r => {
-    r.score += wFormula + wTemp + wZp;
-  });
-
-  // 重複排除 & スコア降順で上位8件
-  const unique = new Map(rows.map(r => [r.name, r]));
-  const out = [...unique.values()].sort((a, b) => b.score - a.score);
-  return out.slice(0, 8);
+   // 重複排除 & スコア降順で上位8件
+   const unique = new Map(rows.map(r => [r.name, r]));
+   const out = [...unique.values()].sort((a,b) => b.score - a.score);
+   return out.slice(0, 8);
 }
