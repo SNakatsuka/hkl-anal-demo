@@ -28,11 +28,10 @@ GitHubリポジトリのSettings > Pages > Source: Deploy from a branch / Branch
 .hklファイルをドロップまたは「ファイルを選択」ボタンでアップロード。
 自動的に解析・変換が行われ、結果が表示されます。
 
-入力フォーマット各行: 空白区切りの h k l I sigma（1行1反射）。
+# 入力フォーマット
+各行: 空白区切りの h k l I sigma（1行1反射）。
 コメント行: #, !, ; で開始（無視されます）。
-例:
-
-# Sample HKL data
+例:Sample HKL data
 1 0 0 100.0 5.0
 0 1 0 90.0 4.5
 
