@@ -2,6 +2,7 @@
 import { createLogger } from '../../services/log.js';
 import { createProgress } from '../../services/progress.js';
 import { getExperimentParams } from '../../services/params.js';
+import { getPriors } from '../../services/priors.js';
 import { bindDownloads } from '../../services/downloads.js';
 import { parseFileWithProgress } from '../../services/parseFileWithProgress.js';
 import { processHKL } from '../pipeline/processHKL.js';
@@ -56,14 +57,18 @@ export function initApp() {
         return;
       }
 
-      // 2) 実験パラメータの取得
+      // 2-1) 実験パラメータの取得
       const params = getExperimentParams();
+
+      // 2-2) 組成 → meanZ → priors」処理
+      const priors = getPriors();
 
       // 3) 解析パイプライン（Wilson, E分布, extinction, screw, glide, SG候補）
       const result = processHKL({
         reflections,
         skipped, formatStats, dominantFormat,
         params,
+        priors,
         wilsonContainer,
         eHistContainer,
         extContainer,
