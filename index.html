@@ -47,15 +47,15 @@
 
       <!-- ★ ID 揃え：meanZval（平均Z）をここでは未算出なので組成は保持だけ。 -->
       <label for="formulaInput">組成（元素情報）</label>
-      <input id="formulaInput" placeholder="例: C12H10N2O3">
+      <input id="formulaInput" name="formulaInput" placeholder="例: C12H10N2O3">
 
       <!-- ★ ID 揃え：params.js / getExperimentParams が参照する temperature -->
       <label for="temperature">測定温度 (K)</label>
-      <input id="temperature" type="number" placeholder="例: 100">
+      <input id="temperature" name="temperature" type="number" placeholder="例: 100">
 
       <!-- ★ ID 揃え：zprime -->
       <label for="zprime">Z′（独立分子数）</label>
-      <input id="zprime" type="number" step="0.5" placeholder="例: 1">
+      <input id="zprime" name="zprime" type="number" step="0.5" placeholder="例: 1">
 
       <!-- ★ ID 揃え：crystalSystem -->
       <label for="crystalSystem">結晶系（推定後に選択も可能）</label>
