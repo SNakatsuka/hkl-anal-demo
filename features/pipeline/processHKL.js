@@ -99,12 +99,7 @@ export function processHKL(ctx) {
 
   // --- 空間群候補ランキング ---
   const sgCandidates = buildSpaceGroupCandidates(
-    ext, eHist, screw, glide, priors, {
-      meanZval:     params.meanZval,
-      temperature:  params.temperature,
-      zprime:       params.zprime,
-      crystalSystem: params.crystalSystem
-    }
+    ext, eHist, screw, glide, priors
   );
   renderSG(sgContainer, sgCandidates, { ext, eHist, screw, glide });
   if (sgCandidates?.length) log(`空間群候補: ${sgCandidates.map(c => c.name).join(", ")}`, "info");
