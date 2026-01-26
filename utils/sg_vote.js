@@ -90,9 +90,9 @@ export function buildVotesForSeeds(seeds, features, weights = getVotingWeights()
   let wFormula = 0;
   const { meanZval, temperature, zprime } = priors;
   if (typeof meanZval === "number" && !Number.isNaN(meanZval)) {
-    if (meanZval > 20) wFormula 
-    if (meanZval < 10) wFormula 
-  }
+    if (meanZval > 20) wFormula = 0.10;
+    if (meanZval < 10) wFormula = -0.05;
+  }
   const wTemp = temperatureWeight(temperature);
   const wZp   = zprimeWeight(zprime);
 
@@ -103,28 +103,37 @@ export function buildVotesForSeeds(seeds, features, weights = getVotingWeights()
     breakdown.push({ key:"base", value: weights.base });
     // center
     breakdown.push({ key:"centering", value: weights.center * wCenter });
+    
     // glide（強い時だけ微加点）
-    let glideSum = weights.glide * wGlide;
-    if (wGlide > 0) {
-      const gname = glide?.best?.name || "";
-      if (gname.startsWith("c-glide") && /(^|\/)c(\/|$)/.test(name)) glideSum 
-      if (gname.startsWith("a-glide") && /(^|\/)a(\/|$)/.test(name)) glideSum 
-      if (gname.startsWith("n-glide") && /(^|\/)n(\/|$)/.test(name)) glideSum 
-      if (gname.startsWith("d-glide") && /d/.test(name))             glideSum 
-    }
-    breakdown.push({ key:"glide", value: glideSum });
-    // screw
-    let screwSum = weights.screw * wScrew;
-    if (wScrew > 0 && /21/.test(name)) screwSum 
-    breakdown.push({ key:"screw21", value: screwSum });
+    let glideSum = weights.glide * wGlide;
+    if (wGlide > 0) {
+      const gname = glide?.best?.name || "";
+      if (gname.startsWith("c-glide") && /(^|\/)c(\/|$)/.test(name))
+        glideSum += weights.micro_glide.c;
+      if (gname.startsWith("a-glide") && /(^|\/)a(\/|$)/.test(name))
+        glideSum += weights.micro_glide.a;
+      if (gname.startsWith("n-glide") && /(^|\/)n(\/|$)/.test(name))
+        glideSum += weights.micro_glide.n;
+      if (gname.startsWith("d-glide") && /d/.test(name))
+        glideSum += weights.micro_glide.d;
+    }
+    breakdown.push({ key:"glide", value: glideSum });
+
+    // screw
+    let screwSum = weights.screw * wScrew;
+    if (wScrew > 0 && /21/.test(name))
+      screwSum += weights.micro_screw21;
+    breakdown.push({ key:"screw21", value: screwSum });
+
     // E
     if (wE > 0) breakdown.push({ key:"Estats", value: wE });
     // priors
     if (wFormula) breakdown.push({ key:"priorZ", value: weights.priorZ * wFormula });
     if (wTemp)    breakdown.push({ key:"temp",   value: weights.temp   * wTemp    });
     if (wZp)      breakdown.push({ key:"zprime", value: weights.zprime * wZp      });
+    // total
+    const total = breakdown.reduce((a,b)=> a + b.value, 0);
 
-    const total = breakdown.reduce((a,b)=>a
     out.push({ name, total, breakdown, centricFlag });
   }
   return out;
