@@ -81,12 +81,11 @@ export function processHKL(ctx) {
   }
 
   // --- present/absent 2値マスク（Eベース推奨） ---
-  const presentMask = buildPresentMaskE(withE, 0.6);
-
+  const presentMask = params.useEforExt ? buildPresentMaskE(withE, 0.6)
+                                        : buildPresentMaskI(reflections);
   // --- Extinction / Lattice-centering ---
   const ext = analyzeExtinction(withE, true, presentMask, {
     crystalSystem: params.crystalSystem,
-    cell: params.cell  // あれば
   });
   renderExtinction(extContainer, ext);
   if (ext) log(`Extinction 判定 (Eベース): 最有力 = ${ext.best.type}`, "info");
@@ -110,5 +109,6 @@ export function processHKL(ctx) {
   return {
     lastF, lastE,
     count: withE.length
+    sgFeatures: { ext, eHist, screw, glide, priors }
   };
 }
