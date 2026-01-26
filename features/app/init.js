@@ -93,9 +93,13 @@ export function initApp() {
     }
   });
   // 投票重み変更 → SG 候補の再計算・再描画
-  document.addEventListener('sg-weights-changed', () => {
-    if (!lastSGFeatures) return;
-    const { rebuildSG } = await import('../pipeline/rebuildSG.js'); // 分離する場合
-    rebuildSG(lastSGFeatures, sgContainer, log);
-  });
+  document.addEventListener('sg-weights-changed', async () => {
+    if (!lastSGFeatures) return;
+    try {
+      const { rebuildSG } = await import('../pipeline/rebuildSG.js');
+      rebuildSG(lastSGFeatures, sgContainer, log);
+    } catch (err) {
+      log("SG 再計算エラー：" + err, "error");
+    }
+  });
 }
