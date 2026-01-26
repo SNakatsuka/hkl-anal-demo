@@ -164,7 +164,9 @@ export function renderWilsonProxySVG(containerEl, points, opts = {}) {
   if (opts.regression) {
     const { a, b } = opts.regression;
     // x範囲の端点で線を生成
-    const x1 = xmin, x2 = xmax;
+    const xs = points.map(p => p.x);
+    const x1 = Math.min(...xs);
+    const x2 = Math.max(...xs);
     const y1 = a * x1 + b;
     const y2 = a * x2 + b;
   
