@@ -17,7 +17,7 @@ import { renderScrewGlideReport } from '../../ui/reports.js';
 
 export function processHKL(ctx) {
   const {
-    reflections, skipped, formatStats, dominantFormat, params,
+    reflections, skipped, formatStats, dominantFormat, params, priors,
     wilsonContainer, eHistContainer, extContainer, sgContainer, log
   } = ctx;
 
@@ -99,7 +99,7 @@ export function processHKL(ctx) {
 
   // --- 空間群候補ランキング ---
   const sgCandidates = buildSpaceGroupCandidates(
-    ext, eHist, screw, glide, {
+    ext, eHist, screw, glide, priors, {
       meanZval:     params.meanZval,
       temperature:  params.temperature,
       zprime:       params.zprime,
