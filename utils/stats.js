@@ -21,5 +21,9 @@ export function eStats(withE) {
   const dC = Math.abs(e2minus1_abs - 0.968);
   const likely = (dA < dC) ? 'acentric（非セントロ）' : 'centric（セントロ）';
 
-  return { n, e1, e2, e3, e4, e2minus1_abs, likely };
-}
+  return { 
+  n, e1, e2, e3, e4,
+  e2m1,
+  e2minus1_abs,
+  likely
+};
