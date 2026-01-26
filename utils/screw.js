@@ -17,13 +17,15 @@ export function analyzeScrew_0k0(reflections, presentMask, { minCount = 20 } = {
   }
   let call = "判定不可（データ不足）";
   let score = 0;
-  if ((even.total + odd.total) >= minCount) {
+  if ((even.total + odd.total) >= minCount && even.total >= 5 && odd.total >= 5) {
     const oddRate  = odd.present  / Math.max(odd.total, 1);
     const evenRate = even.present / Math.max(even.total, 1);
     // “奇数がほぼ消え、偶数が十分出る”条件を2₁の指標に
     if (oddRate < 0.05 && evenRate > 0.2) {
-      call = "2₁@b に適合（0k0: k=2n）";
-      score = 1.0;
+      call = "2₁ screw (b-axis) に適合 0k0: k=2n）";
+      const oddSuppression = Math.max(0, 0.05 - oddRate) / 0.05;  // 0〜1
+      const evenPresence   = Math.max(0, evenRate - 0.2) / 0.8;   // 0〜1
+      score = Math.min(1, 0.5*oddSuppression + 0.5*evenPresence);
     } else {
       call = "顕著な 2₁@b は見えない";
       score = 0.0;
