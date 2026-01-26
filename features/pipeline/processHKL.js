@@ -84,7 +84,7 @@ export function processHKL(ctx) {
   const presentMask = buildPresentMaskE(withE, 0.6);
 
   // --- Extinction / Lattice-centering ---
-  const ext = analyzeExtinction(withE, true);
+  const ext = analyzeExtinction(withE, true, presentMask);
   renderExtinction(extContainer, ext);
   if (ext) log(`Extinction 判定 (Eベース): 最有力 = ${ext.best.type}`, "info");
 
