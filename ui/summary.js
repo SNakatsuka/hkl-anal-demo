@@ -8,6 +8,6 @@ export function renderSummary({ el, counts, stats }) {
     判定形式 内訳: whitespace=${formatStats.whitespace}, fixed-width=${formatStats["fixed-width"]}<br>
     採用形式: <b>${dominantFormat}</b><br>
     スキップ行: ${skipped}<br>
-    &lt;I&gt;: ${meanI.toFixed(3)} / &lt;F²&gt;: ${meanF2_global.toFixed(3)}（正規化で使用: ${meanF2_used.toFixed(3)}）
+    &lt;I&gt;: ${meanI.toFixed(3)} / &lt;F²&gt;: ${meanF2_global.toFixed(3)}（E 正規化　global meanF² を使用: ${meanF2_used.toFixed(3)}）
   `;
 }
