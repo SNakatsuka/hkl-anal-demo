@@ -29,6 +29,8 @@ export function initApp() {
   // 状態（ダウンロード用）
   let lastE = null;
   let lastF = null;
+  // 状態（SG再計算用）
+  let lastSGFeatures = null; // { ext, eHist, screw, glide, priors }
 
   // クリック：ダウンロード
   bindDownloads(btnE, btnF, () => lastE, () => lastF);
@@ -67,8 +69,7 @@ export function initApp() {
       const result = processHKL({
         reflections,
         skipped, formatStats, dominantFormat,
-        params,
-        priors,
+        params, priors,
         wilsonContainer,
         eHistContainer,
         extContainer,
@@ -79,6 +80,7 @@ export function initApp() {
       // 4) ダウンロードデータの更新
       lastF = result.lastF;
       lastE = result.lastE;
+      lastSGFeatures = result.sgFeatures ?? null;
       btnF.disabled = false; btnE.disabled = false;
 
       // 5) 完了
@@ -90,4 +92,10 @@ export function initApp() {
       progress.set(0, "エラー");
     }
   });
+  // 投票重み変更 → SG 候補の再計算・再描画
+  document.addEventListener('sg-weights-changed', () => {
+    if (!lastSGFeatures) return;
+    const { rebuildSG } = await import('../pipeline/rebuildSG.js'); // 分離する場合
+    rebuildSG(lastSGFeatures, sgContainer, log);
+  });
 }
