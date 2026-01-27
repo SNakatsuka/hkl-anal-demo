@@ -84,6 +84,8 @@ export function processHKL(ctx) {
   const presentMask = params.useEforExt ? buildPresentMaskE(withE, 0.6)
                                         : buildPresentMaskI(reflections);
   // --- Extinction / Lattice-centering ---
+  extContainer.innerHTML = "";   // ← これが決定打
+  
   const ext = analyzeExtinction(withE, true, presentMask, {
     crystalSystem: params.crystalSystem,
   });
@@ -94,8 +96,8 @@ export function processHKL(ctx) {
   } else {
     extContainer.textContent = "未計算（データ不足）";
     log("Extinction: データ不足", "warn");
-  };
-
+  }
+  
   // --- Screw（0k0 → 2₁@b） ---
   const screw = analyzeScrew_0k0(withE, presentMask, { minCount: 20 });
 
