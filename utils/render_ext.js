@@ -1,4 +1,5 @@
 export function renderExtinction(container, ext) {
+  container.innerHTML = "";   // ← これを必ず最初に入れる
   if (!ext) {
     container.textContent = "未計算";
     return;
