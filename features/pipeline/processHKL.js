@@ -107,8 +107,9 @@ export function processHKL(ctx) {
   if (sgCandidates?.length) log(`空間群候補: ${sgCandidates.map(c => c.name).join(", ")}`, "info");
 
   return {
-    lastF, lastE,
-    count: withE.length
+    lastF,
+    lastE,
+    count: withE.length,
     sgFeatures: { ext, eHist, screw, glide, priors }
   };
 }
