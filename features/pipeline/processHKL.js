@@ -88,7 +88,13 @@ export function processHKL(ctx) {
     crystalSystem: params.crystalSystem,
   });
   renderExtinction(extContainer, ext);
-  if (ext) log(`Extinction 判定 (Eベース): 最有力 = ${ext.best.type}`, "info");
+  if (ext) {
+    renderExtinction(extContainer, ext);
+    log(`Extinction 判定 (Eベース): 最有力 = ${ext.best.type}`, "info");
+  } else {
+    extContainer.textContent = "未計算（データ不足）";
+    log("Extinction: データ不足", "warn");
+  };
 
   // --- Screw（0k0 → 2₁@b） ---
   const screw = analyzeScrew_0k0(withE, presentMask, { minCount: 20 });
