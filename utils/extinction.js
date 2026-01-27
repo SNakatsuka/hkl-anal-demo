@@ -220,7 +220,9 @@ export function analyzeExtinction(reflections, withE=false, presentMask=null, op
 }
 
 function withPvals(type, forb, allow, nf, kf, na, ka) {
-  const ratio = forb / Math.max(allow, 1e-12);
+  const safeForb  = Number.isFinite(forb)  ? forb  : 0;
+  const safeAllow = Number.isFinite(allow) ? allow : 1e-6;
+  const ratio = safeForb / safeAllow;
   const { p } = zTestProportions(kf, nf, ka, na);
   return {
     type,
