@@ -11,9 +11,9 @@ export function renderExtinction(container, ext) {
     return `
       <tr>
         <td>${s.type}</td>
-        <td>${s.forbid.toFixed(3)}</td>
-        <td>${s.allow.toFixed(3)}</td>
-        <td>${s.ratio.toFixed(3)}</td>
+        <td>${Number.isFinite(s.forbid) ? s.forbid.toFixed(3) : "-"}</td>
+        <td>${Number.isFinite(s.allow)  ? s.allow.toFixed(3)  : "-"}</td>
+        <td>${Number.isFinite(s.ratio)  ? s.ratio.toFixed(3)  : "-"}</td>
         <td class="conf">${conf.stars}</td>
       </tr>
     `;
