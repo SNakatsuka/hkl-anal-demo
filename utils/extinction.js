@@ -189,6 +189,7 @@ export function analyzeExtinction(reflections, withE=false, presentMask=null, op
     scores.push(withPvals("R(hex)", R_forbid, R_allow, nfR, kfR, naR, kaR));
   }
 
+  scores = scores.filter(s => Number.isFinite(s.ratio));
   scores.sort((a,b)=> a.ratio - b.ratio);
   const best   = scores[0];
   const second = scores[1] ?? { ratio: 1.0 };
