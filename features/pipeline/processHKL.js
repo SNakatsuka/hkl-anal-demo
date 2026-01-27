@@ -9,7 +9,7 @@ import { renderExtinction } from "../../utils/render_ext.js";
 import { renderSG } from "../../utils/render_sg.js";
 import { buildSpaceGroupCandidates } from '../../utils/sg_candidates.js';
 // 新規
-import { buildPresentMaskE } from '../../utils/presence.js';
+import { buildPresentMaskE, buildPresentMaskI } from '../../utils/presence.js';
 import { analyzeScrew_0k0 } from '../../utils/screw.js';
 import { analyzeGlide_h0l } from '../../utils/glide.js';
 import { renderSummary } from '../../ui/summary.js';
