@@ -87,7 +87,7 @@ export function processHKL(ctx) {
   const ext = analyzeExtinction(withE, true, presentMask, {
     crystalSystem: params.crystalSystem,
   });
-  renderExtinction(extContainer, ext);
+  
   if (ext) {
     renderExtinction(extContainer, ext);
     log(`Extinction 判定 (Eベース): 最有力 = ${ext.best.type}`, "info");
