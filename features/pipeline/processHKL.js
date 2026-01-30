@@ -98,11 +98,7 @@ export function processHKL(ctx) {
   // 低 R 側 20% のビンだけ使う 20260130追加
   const useBins = bins.slice(0, 4).flat(); // 20% なら 4/20
   const filteredMask = presentMask.filter((_, idx) => useBins.includes(idx));
-  
-  const ext = analyzeExtinction(withE, true, filteredMask, {
-    crystalSystem: params.crystalSystem,
-  });
-  
+    
   const ext = analyzeExtinction(withE, true, presentMask, {
     crystalSystem: params.crystalSystem,
   });
