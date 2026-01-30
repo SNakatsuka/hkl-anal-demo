@@ -8,12 +8,14 @@ import { analyzeExtinction } from '../../utils/extinction.js';
 import { renderExtinction } from "../../utils/render_ext.js";
 import { renderSG } from "../../utils/render_sg.js";
 import { buildSpaceGroupCandidates } from '../../utils/sg_candidates.js';
-// 新規
 import { buildPresentMaskE, buildPresentMaskI } from '../../utils/presence.js';
 import { analyzeScrew_0k0 } from '../../utils/screw.js';
 import { analyzeGlide_h0l } from '../../utils/glide.js';
 import { renderSummary } from '../../ui/summary.js';
 import { renderScrewGlideReport } from '../../ui/reports.js';
+// --- NEW20260130: 擬似分解能ビンによる再正規化 ---
+import { buildPseudoResolutionBins } from '../../utils/pseudo_resolution.js';
+import { renormalizeE_byBins } from '../../utils/e_normalize_bins.js';
 
 export function processHKL(ctx) {
   const {
@@ -31,6 +33,13 @@ export function processHKL(ctx) {
   const ce   = computeE(withF);
   const withE = ce.reflections;
 
+  // --- NEW20260130: 擬似分解能ビンによる再正規化 ---
+  const bins = buildPseudoResolutionBins(withE, 20);
+  const ce2  = renormalizeE_byBins(withE, bins);
+  withE = ce2.reflections;
+  
+  log(`E 正規化: 分解能ビン使用 (nbin=20)`, "info");
+  
   // --- サマリ描画 ---
   renderSummary({
     el: document.getElementById('summary'),
@@ -84,7 +93,15 @@ export function processHKL(ctx) {
   const presentMask = params.useEforExt ? buildPresentMaskE(withE, 0.6)
                                         : buildPresentMaskI(reflections);
   // --- Extinction / Lattice-centering ---
-  extContainer.innerHTML = "";   // ← これが決定打
+  extContainer.innerHTML = "";  
+
+  // 低 R 側 20% のビンだけ使う 20260130追加
+  const useBins = bins.slice(0, 4).flat(); // 20% なら 4/20
+  const filteredMask = presentMask.filter((_, idx) => useBins.includes(idx));
+  
+  const ext = analyzeExtinction(withE, true, filteredMask, {
+    crystalSystem: params.crystalSystem,
+  });
   
   const ext = analyzeExtinction(withE, true, presentMask, {
     crystalSystem: params.crystalSystem,
