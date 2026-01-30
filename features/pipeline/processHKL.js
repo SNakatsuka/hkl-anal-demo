@@ -16,6 +16,7 @@ import { renderScrewGlideReport } from '../../ui/reports.js';
 // --- NEW20260130: 擬似分解能ビンによる再正規化 ---
 import { buildPseudoResolutionBins } from '../../utils/pseudo_resolution.js';
 import { renormalizeE_byBins } from '../../utils/e_normalize_bins.js';
+import { buildPattersonGrid } from '../../utils/patterson.js';
 
 export function processHKL(ctx) {
   const {
