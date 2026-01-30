@@ -158,7 +158,7 @@ export function analyzeExtinction(reflections, withE=false, presentMask=null, op
   const F_forbid = robustMedian(Ff);
   const F_allow  = robustMedian(Fa);
 
-  const scores = [
+  let scores = [
     withPvals("I", I_forbid, I_allow, nfI, kfI, naI, kaI),
     withPvals("C", C_forbid, C_allow, nfC, kfC, naC, kaC),
     withPvals("F", F_forbid, F_allow, nfF, kfF, naF, kaF),
@@ -175,7 +175,7 @@ export function analyzeExtinction(reflections, withE=false, presentMask=null, op
       confidenceStars: "★☆☆☆☆"
     }
   ];
-
+  
   if (enableRhex) {
     const Rf = [], Ra = [];
     let nfR=0, naR=0, kfR=0, kaR=0;
