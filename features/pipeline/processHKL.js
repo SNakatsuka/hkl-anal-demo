@@ -19,8 +19,8 @@ import { renormalizeE_byBins } from '../../utils/e_normalize_bins.js';
 // --- Patterson マップ生成（NEW20260131） ---
 import { buildPattersonGrid } from '../../utils/patterson.js';
 import { renderPattersonViewer } from '../../ui/patterson_viewer.js';
-import { renderPattersonVolumeViewer } from './ui/patterson_volume_viewer.js';
-import { processRho } from "./features/pipeline/processRho.js";
+import { renderPattersonVolumeViewer } from '../../ui/patterson_volume_viewer.js';
+import { processRho } from './processRho.js';
 
 export function processHKL(ctx) {
   const {
@@ -51,18 +51,20 @@ export function processHKL(ctx) {
     document.getElementById('pattersonContainer'),
     pat
   );
+  
   log("Patterson マップ生成完了 (grid=64³)", "info");
 
   // 3D viewer（別の DOM に描画）
   renderPattersonVolumeViewer(
-    document.getElementById("pattersonContainer"),
+    document.getElementById("pattersonVolumeContainer"),
     pat
   );
-  
+    
   processRho({
     reflections,
     rhoContainer: document.getElementById("rhoVolumeContainer")
   });
+
 
   // --- サマリ描画 ---
   renderSummary({
