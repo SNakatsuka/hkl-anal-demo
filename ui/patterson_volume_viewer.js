@@ -7,7 +7,7 @@ function makeLUTTexture(lutArray) {
     lutArray,
     256, 1,
     THREE.RGBFormat,
-    THREE.FloatType
+    THREE.UnsignedByteType   // ★ 修正
   );
   tex.needsUpdate = true;
   tex.magFilter = THREE.LinearFilter;
