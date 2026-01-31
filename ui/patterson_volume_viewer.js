@@ -59,10 +59,17 @@ export function renderPattersonVolumeViewer(container, pat) {
   const width = 512;
   const height = 512;
 
-  const renderer = new THREE.WebGLRenderer({ antialias: true });
+  const canvas = document.createElement("canvas");
+  const gl = canvas.getContext("webgl2");   // ★ WebGL2 を明示的に要求
+  
+  const renderer = new THREE.WebGLRenderer({
+    canvas,
+    context: gl,
+    antialias: true
+  });
   renderer.setSize(width, height);
   container.appendChild(renderer.domElement);
-
+    
   const scene = new THREE.Scene();
   const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 10);
   camera.position.z = 1;
