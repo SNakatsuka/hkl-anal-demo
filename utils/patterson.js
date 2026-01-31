@@ -1,21 +1,21 @@
 // utils/patterson.js
+import { ifft3D } from './simple_fft3d.js'; // MVP: 自前 or 小型ライブラリ
+
 export function buildPattersonGrid(reflections, { gridSize = 64 }) {
-  // 1) 複素配列 F(hkl) をグリッドに詰める（位相0 → 実数 = |F|²）
   const N = gridSize;
   const real = new Float32Array(N*N*N);
   const imag = new Float32Array(N*N*N); // 0 のまま
 
+  // --- 1) hkl → F² をグリッドに詰める ---
   for (const r of reflections) {
     const h = ((r.h % N) + N) % N;
     const k = ((r.k % N) + N) % N;
     const l = ((r.l % N) + N) % N;
     const idx = h + N*(k + N*l);
-    const F2 = r.F * r.F;
-    real[idx] += F2; // 累積
+    real[idx] += r.F * r.F; // Patterson は |F|²
   }
 
-  // 2) 3D 逆FFT（MVP は JS の FFT ライブラリ or 自前で 1D×3）
-  // ここは最初は「ダミーのガウス」でもよいくらい。まず描画パイプを通す。
+  // --- 2) 逆 FFT ---
   const rho = ifft3D(real, imag, N); // Float32Array N³
 
   return { gridSize: N, data: rho };
