@@ -1,5 +1,5 @@
 // ui/patterson_viewer.js
-import * as THREE from '../../webgl/three-esm.js';  // ← リネーム済み
+import * as THREE from '../webgl/three-esm.js';  // ← リネーム済み
 
 export function renderPattersonViewer(container, pat) {
   const { gridSize: N, data } = pat;
