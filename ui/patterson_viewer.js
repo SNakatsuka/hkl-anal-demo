@@ -53,7 +53,7 @@ export function renderPattersonViewer(container, pat) {
   const width = 512;
   const height = 512;
 
-  const renderer = new THREE.WebGLRenderer();
+  const renderer = new THREE.WebGLRenderer({ antialias: true });  // ← これだけでOK
   renderer.setSize(width, height);
   container.appendChild(renderer.domElement);
 
