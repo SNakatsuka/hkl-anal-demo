@@ -20,7 +20,7 @@ import { renormalizeE_byBins } from '../../utils/e_normalize_bins.js';
 import { buildPattersonGrid } from '../../utils/patterson.js';
 import { renderPattersonViewer } from '../../ui/patterson_viewer.js';
 import { renderPattersonVolumeViewer } from './ui/patterson_volume_viewer.js';
-
+import { processRho } from "./features/pipeline/processRho.js";
 
 export function processHKL(ctx) {
   const {
@@ -58,6 +58,11 @@ export function processHKL(ctx) {
     document.getElementById("pattersonContainer"),
     pat
   );
+  
+  processRho({
+    reflections,
+    rhoContainer: document.getElementById("rhoVolumeContainer")
+  });
 
   // --- サマリ描画 ---
   renderSummary({
