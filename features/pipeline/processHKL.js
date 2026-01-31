@@ -16,7 +16,10 @@ import { renderScrewGlideReport } from '../../ui/reports.js';
 // --- NEW20260130: 擬似分解能ビンによる再正規化 ---
 import { buildPseudoResolutionBins } from '../../utils/pseudo_resolution.js';
 import { renormalizeE_byBins } from '../../utils/e_normalize_bins.js';
+// --- Patterson マップ生成（NEW20260131） ---
 import { buildPattersonGrid } from '../../utils/patterson.js';
+import { renderPattersonViewer } from '../../ui/patterson_viewer.js';
+
 
 export function processHKL(ctx) {
   const {
@@ -41,6 +44,13 @@ export function processHKL(ctx) {
   
   log(`E 正規化: 分解能ビン使用 (nbin=20)`, "info");
   
+  const pat = buildPattersonGrid(withF, { gridSize: 64 });
+  renderPattersonViewer(
+    document.getElementById('pattersonContainer'),
+    pat
+  );
+  log("Patterson マップ生成完了 (grid=64³)", "info");
+
   // --- サマリ描画 ---
   renderSummary({
     el: document.getElementById('summary'),
