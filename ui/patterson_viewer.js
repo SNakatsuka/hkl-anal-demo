@@ -124,14 +124,34 @@ export function renderPattersonViewer(container, pat) {
     return slice;
   }
 
+  // --- min/max 正規化（NEW20260131） --- 
+  function normalizeSlice(slice) {
+    let min = Infinity, max = -Infinity;
+  
+    for (let i = 0; i < slice.length; i++) {
+      const v = slice[i];
+      if (v < min) min = v;
+      if (v > max) max = v;
+    }
+  
+    const range = max - min || 1;
+  
+    const out = new Float32Array(slice.length);
+    for (let i = 0; i < slice.length; i++) {
+      out[i] = (slice[i] - min) / range;
+    }
+    return out;
+  }
+  
   // --- 描画 ---
   function render() {
     const axis = axisSel.value;
     const idx = parseInt(slider.value);
     const cmap = cmapSel.selectedIndex;
 
-    const slice = extractSlice(axis, idx);
-
+    const rawSlice = extractSlice(axis, idx);
+    const slice = normalizeSlice(rawSlice);
+        
     const tex = new THREE.DataTexture(
       slice,
       N,
