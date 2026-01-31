@@ -59,7 +59,7 @@ export function renderPattersonVolumeViewer(container, pat) {
   const width = 512;
   const height = 512;
 
-  const renderer = new THREE.WebGLRenderer();
+  const renderer = new THREE.WebGLRenderer({ antialias: true });
   renderer.setSize(width, height);
   container.appendChild(renderer.domElement);
 
@@ -71,7 +71,6 @@ export function renderPattersonVolumeViewer(container, pat) {
   const tex3d = new THREE.Data3DTexture(data, N, N, N);
   tex3d.format = THREE.RedFormat;
   tex3d.type = THREE.FloatType;
-  tex3d.internalFormat = THREE.R32F;   // ★ これが必須 ★
   tex3d.minFilter = THREE.LinearFilter;
   tex3d.magFilter = THREE.LinearFilter;
   tex3d.unpackAlignment = 1;
