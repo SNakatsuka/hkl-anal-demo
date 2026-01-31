@@ -1,5 +1,6 @@
 // ui/patterson_viewer.js
 import * as THREE from '../webgl/three-esm.js';  // ← リネーム済み
+import { viridisLUT, magmaLUT } from './colormaps.js';
 
 export function renderPattersonViewer(container, pat) {
   const { gridSize: N, data } = pat;
