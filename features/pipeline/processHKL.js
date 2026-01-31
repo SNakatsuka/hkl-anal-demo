@@ -35,7 +35,7 @@ export function processHKL(ctx) {
 
   // --- E 正規化 ---
   const ce   = computeE(withF);
-  const withE = ce.reflections;
+  let withE = ce.reflections;
 
   // --- NEW20260130: 擬似分解能ビンによる再正規化 ---
   const bins = buildPseudoResolutionBins(withE, 20);
@@ -110,10 +110,11 @@ export function processHKL(ctx) {
   const useBins = bins.slice(0, 4).flat(); // 20% なら 4/20
   const filteredMask = presentMask.filter((_, idx) => useBins.includes(idx));
     
-  const ext = analyzeExtinction(withE, true, presentMask, {
+  const ext = analyzeExtinction(withE, true, filteredMask, {
     crystalSystem: params.crystalSystem,
   });
-  
+  log(`Extinction: 使用ビン = 0–3 (${filteredMask.length} 反射)`, "info");
+    
   if (ext) {
     renderExtinction(extContainer, ext);
     log(`Extinction 判定 (Eベース): 最有力 = ${ext.best.type}`, "info");
