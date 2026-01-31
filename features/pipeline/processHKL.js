@@ -46,15 +46,11 @@ export function processHKL(ctx) {
   log(`E 正規化: 分解能ビン使用 (nbin=20)`, "info");
   
   const pat = buildPattersonGrid(withF, { gridSize: 64 });
-  const pat2d = {
-    gridSize: pat.gridSize,
-    data: pat.data.slice(0, pat.gridSize * pat.gridSize)
-  };
 
   // 2D viewer は Z=0 のスライスだけ使う
   renderPattersonViewer(
     document.getElementById('pattersonContainer'),
-    pat2d
+    pat
   );
   
   log("Patterson マップ生成完了 (grid=64³)", "info");
