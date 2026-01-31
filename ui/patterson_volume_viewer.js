@@ -98,8 +98,10 @@ export function renderPattersonVolumeViewer(container, pat) {
 
     fragmentShader: `
       precision highp float;
+      precision highp sampler3D;   // ← これが必須！
+      
       varying vec2 vUv;
-
+      
       uniform sampler3D volumeTex;
       uniform sampler2D lutTex;
       uniform float threshold;
