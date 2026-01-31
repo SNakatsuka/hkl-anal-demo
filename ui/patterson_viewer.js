@@ -1,5 +1,5 @@
 // ui/patterson_viewer.js
-import * as THREE from 'three';
+import * as THREE from '../../libs/three/three-esm.js';
 
 export function renderPattersonViewer(container, pat) {
   const { gridSize, data } = pat;
