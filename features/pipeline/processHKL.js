@@ -19,6 +19,7 @@ import { renormalizeE_byBins } from '../../utils/e_normalize_bins.js';
 // --- Patterson マップ生成（NEW20260131） ---
 import { buildPattersonGrid } from '../../utils/patterson.js';
 import { renderPattersonViewer } from '../../ui/patterson_viewer.js';
+import { renderPattersonVolumeViewer } from './ui/patterson_volume_viewer.js';
 
 
 export function processHKL(ctx) {
@@ -45,11 +46,18 @@ export function processHKL(ctx) {
   log(`E 正規化: 分解能ビン使用 (nbin=20)`, "info");
   
   const pat = buildPattersonGrid(withF, { gridSize: 64 });
+  // 2D viewer
   renderPattersonViewer(
     document.getElementById('pattersonContainer'),
     pat
   );
   log("Patterson マップ生成完了 (grid=64³)", "info");
+
+  // 3D viewer（別の DOM に描画）
+  renderPattersonVolumeViewer(
+    document.getElementById("pattersonContainer"),
+    pat
+  );
 
   // --- サマリ描画 ---
   renderSummary({
