@@ -52,3 +52,112 @@ export function renderPattersonVolumeViewer(container, pat) {
     opacitySlider,
     document.createTextNode(" colormap "),
     cmapSel
+  );
+  container.appendChild(ui);
+
+  // --- Three.js ---
+  const width = 512;
+  const height = 512;
+
+  const renderer = new THREE.WebGLRenderer();
+  renderer.setSize(width, height);
+  container.appendChild(renderer.domElement);
+
+  const scene = new THREE.Scene();
+  const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 10);
+  camera.position.z = 1;
+
+  // --- 3D Texture ---
+  const tex3d = new THREE.Data3DTexture(data, N, N, N);
+  tex3d.format = THREE.RedFormat;
+  tex3d.type = THREE.FloatType;
+  tex3d.minFilter = THREE.LinearFilter;
+  tex3d.magFilter = THREE.LinearFilter;
+  tex3d.unpackAlignment = 1;
+  tex3d.needsUpdate = true;
+
+  // --- Fullscreen quad ---
+  const geometry = new THREE.PlaneGeometry(2, 2);
+
+  const material = new THREE.ShaderMaterial({
+    uniforms: {
+      volumeTex: { value: tex3d },
+      threshold: { value: 0.2 },
+      opacity: { value: 0.1 },
+      lutTex: { value: null },
+      cmap: { value: 0 }
+    },
+
+    vertexShader: `
+      varying vec2 vUv;
+      void main() {
+        vUv = uv;
+        gl_Position = vec4(position, 1.0);
+      }
+    `,
+
+    fragmentShader: `
+      precision highp float;
+      varying vec2 vUv;
+
+      uniform sampler3D volumeTex;
+      uniform sampler2D lutTex;
+      uniform float threshold;
+      uniform float opacity;
+      uniform int cmap;
+
+      void main() {
+        vec3 rayDir = normalize(vec3(vUv - 0.5, 1.0));
+        vec3 pos = vec3(vUv, 0.0);
+
+        vec4 acc = vec4(0.0);
+
+        for (int i = 0; i < 128; i++) {
+          float v = texture(volumeTex, pos).r;
+
+          if (v > threshold) {
+            vec3 col = (cmap == 0)
+              ? vec3(v)
+              : texture(lutTex, vec2(v, 0.5)).rgb;
+
+            acc.rgb += col * opacity;
+            acc.a += opacity;
+          }
+
+          pos += rayDir * 0.01;
+          if (pos.z > 1.0) break;
+        }
+
+        gl_FragColor = acc;
+      }
+    `
+  });
+
+  const mesh = new THREE.Mesh(geometry, material);
+  scene.add(mesh);
+
+  // --- Render loop ---
+  function render() {
+    material.uniforms.threshold.value = thresholdSlider.value / 100;
+    material.uniforms.opacity.value = opacitySlider.value / 100;
+
+    const cmap = cmapSel.selectedIndex;
+    material.uniforms.cmap.value = cmap;
+
+    if (cmap === 0) {
+      material.uniforms.lutTex.value = null;
+    } else if (cmap === 1) {
+      material.uniforms.lutTex.value = magmaTex;
+    } else {
+      material.uniforms.lutTex.value = viridisTex;
+    }
+
+    renderer.render(scene, camera);
+  }
+
+  thresholdSlider.oninput = render;
+  opacitySlider.oninput = render;
+  cmapSel.onchange = render;
+
+  render();
+}
