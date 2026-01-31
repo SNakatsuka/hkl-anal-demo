@@ -61,7 +61,12 @@ export function renderPattersonVolumeViewer(container, pat) {
 
   const canvas = document.createElement("canvas");
   const gl = canvas.getContext("webgl2");   // ★ WebGL2 を明示的に要求
-  
+
+  if (!gl) {
+    container.innerHTML = "WebGL2 が利用できないため、3D 表示は無効です。";
+    return;
+  }
+
   const renderer = new THREE.WebGLRenderer({
     canvas,
     context: gl,
