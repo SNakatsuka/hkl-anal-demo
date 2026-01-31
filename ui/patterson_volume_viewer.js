@@ -71,11 +71,12 @@ export function renderPattersonVolumeViewer(container, pat) {
   const tex3d = new THREE.Data3DTexture(data, N, N, N);
   tex3d.format = THREE.RedFormat;
   tex3d.type = THREE.FloatType;
+  tex3d.internalFormat = THREE.R32F;   // ★ これが必須 ★
   tex3d.minFilter = THREE.LinearFilter;
   tex3d.magFilter = THREE.LinearFilter;
   tex3d.unpackAlignment = 1;
   tex3d.needsUpdate = true;
-
+    
   // --- Fullscreen quad ---
   const geometry = new THREE.PlaneGeometry(2, 2);
 
