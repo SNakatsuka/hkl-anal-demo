@@ -155,14 +155,20 @@ export function renderPattersonViewer(container, pat) {
     const cmap = cmapSel.selectedIndex;
 
     const rawSlice = extractSlice(axis, idx);
-    const slice = normalizeSlice(rawSlice);
-        
+    const slice = normalizeSlice(rawSlice);  // 0–1 に正規化済み
+
+    // 0–1 → 0–255 の 8bit グレースケールに変換
+    const u8 = new Uint8Array(N * N);
+    for (let i = 0; i < slice.length; i++) {
+      u8[i] = Math.max(0, Math.min(255, Math.floor(slice[i] * 255)));
+    }
+
     const tex = new THREE.DataTexture(
-      slice,
+      u8,
       N,
       N,
-      THREE.RedFormat,
-      THREE.FloatType
+      THREE.LuminanceFormat   // ★ 1 チャンネル 8bit
+      // type はデフォルト UnsignedByteType のままで OK
     );
     tex.needsUpdate = true;
 
@@ -175,6 +181,7 @@ export function renderPattersonViewer(container, pat) {
     } else {
       material.uniforms.lutTex.value = viridisTex;
     }
+
     renderer.render(scene, camera);
   }
 
