@@ -2,6 +2,22 @@
 import * as THREE from '../webgl/three-esm.js';  // ← リネーム済み
 import { viridisLUT, magmaLUT } from './colormaps.js';
 
+function makeLUTTexture(lutArray) {
+  const tex = new THREE.DataTexture(
+    lutArray,
+    256, 1,
+    THREE.RGBFormat,
+    THREE.FloatType
+  );
+  tex.needsUpdate = true;
+  tex.magFilter = THREE.LinearFilter;
+  tex.minFilter = THREE.LinearFilter;
+  return tex;
+}
+
+const viridisTex = makeLUTTexture(viridisLUT);
+const magmaTex   = makeLUTTexture(magmaLUT);
+
 export function renderPattersonViewer(container, pat) {
   const { gridSize: N, data } = pat;
 
@@ -51,8 +67,10 @@ export function renderPattersonViewer(container, pat) {
   const material = new THREE.ShaderMaterial({
     uniforms: {
       sliceTex: { value: null },
-      cmap: { value: 0 }
+      cmap: { value: 0 },
+      lutTex: { value: null }
     },
+  
     vertexShader: `
       varying vec2 vUv;
       void main() {
@@ -60,45 +78,31 @@ export function renderPattersonViewer(container, pat) {
         gl_Position = vec4(position, 1.0);
       }
     `,
+  
     fragmentShader: `
       precision highp float;
       varying vec2 vUv;
+  
       uniform sampler2D sliceTex;
+      uniform sampler2D lutTex;
       uniform int cmap;
-
-      vec3 gray(float v) {
-        return vec3(v);
-      }
-
-      vec3 magma(float v) {
-        return vec3(
-          pow(v, 0.25),
-          pow(v, 0.5),
-          v
-        );
-      }
-
-      vec3 viridis(float v) {
-        return vec3(
-          0.2 + 0.8*v,
-          0.1 + 0.9*v,
-          0.3 + 0.7*v
-        );
-      }
-
+  
       void main() {
         float v = texture2D(sliceTex, vUv).r;
-
-        vec3 col;
-        if (cmap == 0) col = gray(v);
-        else if (cmap == 1) col = magma(v);
-        else col = viridis(v);
-
+  
+        // gray の場合は LUT を使わずそのまま
+        if (cmap == 0) {
+          gl_FragColor = vec4(vec3(v), 1.0);
+          return;
+        }
+  
+        // LUT lookup
+        vec3 col = texture2D(lutTex, vec2(v, 0.5)).rgb;
+  
         gl_FragColor = vec4(col, 1.0);
       }
     `
   });
-
   const mesh = new THREE.Mesh(geometry, material);
   scene.add(mesh);
 
@@ -164,7 +168,13 @@ export function renderPattersonViewer(container, pat) {
 
     material.uniforms.sliceTex.value = tex;
     material.uniforms.cmap.value = cmap;
-
+    if (cmap === 0) {
+      material.uniforms.lutTex.value = null;  // gray
+    } else if (cmap === 1) {
+      material.uniforms.lutTex.value = magmaTex;
+    } else {
+      material.uniforms.lutTex.value = viridisTex;
+    }
     renderer.render(scene, camera);
   }
 
