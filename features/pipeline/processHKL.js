@@ -46,10 +46,13 @@ export function processHKL(ctx) {
   log(`E 正規化: 分解能ビン使用 (nbin=20)`, "info");
   
   const pat = buildPattersonGrid(withF, { gridSize: 64 });
-  // 2D viewer
+  // 2D viewer は Z=0 のスライスだけ使う
   renderPattersonViewer(
     document.getElementById('pattersonContainer'),
-    pat
+    {
+      gridSize: N,
+      data: pat.data.slice(0, N*N)   // ★ これだけで直る
+    }
   );
   
   log("Patterson マップ生成完了 (grid=64³)", "info");
@@ -64,7 +67,6 @@ export function processHKL(ctx) {
     reflections,
     rhoContainer: document.getElementById("rhoVolumeContainer")
   });
-
 
   // --- サマリ描画 ---
   renderSummary({
